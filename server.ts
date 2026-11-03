@@ -27,6 +27,8 @@ const ai = apiKey
     })
   : null;
 
+import { parseIngredientLine } from './src/utils/ingredientParser.js';
+
 // Helper to build 100% reliable Walmart search URLs without fragile department facets or invalid SKUs
 function buildWalmartSearchUrl(query: string): string {
   // Strip special symbols and collapse spaces
@@ -35,63 +37,14 @@ function buildWalmartSearchUrl(query: string): string {
 }
 
 // Thorough ingredient text sanitizer to strip culinary prep words, units, and parentheses
-// so Walmart product searches match real supermarket inventory!
-function cleanIngredientNameForWalmart(rawText: string): { cleanName: string; amount: number; unit: string } {
-  // 1. Remove parenthetical remarks like (15 oz), (about 2 cups), (drained)
-  let text = rawText.replace(/\([^)]*\)/g, ' ').trim();
-
-  // 2. Extract leading amount / fraction (e.g. 1.5, 1 1/2, 2, 1/4)
-  let amount = 1;
-  const fractionMatch = text.match(/^(\d+)?\s*(\d+\/\d+)?/);
-  if (fractionMatch && (fractionMatch[1] || fractionMatch[2])) {
-    const whole = fractionMatch[1] ? parseFloat(fractionMatch[1]) : 0;
-    let fraction = 0;
-    if (fractionMatch[2]) {
-      const [num, den] = fractionMatch[2].split('/').map(Number);
-      if (den) fraction = num / den;
-    }
-    amount = whole + fraction || 1;
-    text = text.substring(fractionMatch[0].length).trim();
-  } else {
-    const decMatch = text.match(/^([\d\.]+)/);
-    if (decMatch) {
-      amount = parseFloat(decMatch[1]) || 1;
-      text = text.substring(decMatch[0].length).trim();
-    }
-  }
-
-  // 3. Extract common measurement units
-  let unit = 'item';
-  const unitRegex = /^(lbs|lb|pounds|pound|oz|ounces|ounce|cups|cup|tbsp|tablespoons|tablespoon|tsp|teaspoons|teaspoon|cloves|clove|heads|head|bulbs|bulb|cans|can|jars|jar|bottles|bottle|packages|package|pack|packs|bags|bag|pints|pint|quarts|quart|bunches|bunch|slices|slice|pieces|piece|stalks|stalk)\b/i;
-  const unitMatch = text.match(unitRegex);
-  if (unitMatch) {
-    unit = unitMatch[1].toLowerCase();
-    text = text.substring(unitMatch[0].length).trim();
-  }
-
-  // 4. Strip culinary preparation instructions, descriptors, and cut styles
-  const prepWords = [
-    'minced', 'diced', 'chopped', 'sliced', 'grated', 'shredded', 'crushed', 'melted',
-    'softened', 'divided', 'rinsed and drained', 'rinsed', 'drained', 'peeled and seeded',
-    'peeled', 'trimmed', 'seeded', 'stemmed', 'pitted', 'halved', 'quartered', 'julienned',
-    'cooked', 'uncooked', 'thawed', 'frozen', 'room temperature', 'at room temperature',
-    'to taste', 'for serving', 'for garnish', 'optional', 'freshly ground', 'coarsely',
-    'finely', 'thinly', 'thickly', 'packed', 'loosely', 'warm', 'cold', 'hot', 'dry',
-    'cut into strips', 'cut into cubes', 'cut into pieces', 'boneless skinless', 'boneless, skinless'
-  ];
-
-  for (const pw of prepWords) {
-    const re = new RegExp(`\\b${pw}\\b`, 'gi');
-    text = text.replace(re, ' ');
-  }
-
-  // 5. Clean punctuation and excess whitespace
-  text = text.replace(/^[,\-\.\s]+|[,\-\.\s]+$/g, '').replace(/\s+/g, ' ').trim();
-
+// while strictly preserving decimal/fraction amounts, measurement units, and authentic food names!
+function cleanIngredientNameForWalmart(rawText: string): { cleanName: string; amount: number; unit: string; extractedPackageSize?: string } {
+  const parsed = parseIngredientLine(rawText);
   return {
-    cleanName: text || rawText.trim(),
-    amount: amount || 1,
-    unit: unit || 'item',
+    cleanName: parsed.cleanName,
+    amount: parsed.amount,
+    unit: parsed.unit,
+    extractedPackageSize: parsed.extractedPackageSize,
   };
 }
 
@@ -285,9 +238,12 @@ ${recipeText}`;
 
     // Attach verified Walmart deep search links
     const enhancedIngredients = (parsedData.ingredients || []).map((ing: any, idx: number) => {
-      const cleaned = cleanIngredientNameForWalmart(ing.name || 'Ingredient');
-      const cleanName = cleaned.cleanName;
+      const parsedRaw = parseIngredientLine(ing.rawText || `${ing.amount || ''} ${ing.unit || ''} ${ing.name || ''}`);
+      const cleanName = ing.name ? parseIngredientLine(ing.name).cleanName : parsedRaw.cleanName;
       const category = ing.category || 'Pantry & Dry Goods';
+      const amount = typeof ing.amount === 'number' && !isNaN(ing.amount) && ing.amount > 0 ? ing.amount : parsedRaw.amount;
+      const unit = ing.unit && ing.unit !== 'item' && ing.unit !== 'unit' ? ing.unit : parsedRaw.unit;
+      const packageSize = ing.packageSize && !ing.packageSize.includes('standard pack') ? ing.packageSize : (parsedRaw.extractedPackageSize || '1 package');
       
       // Clean query: remove any remaining prep artifacts
       let walmartQuery = (ing.walmartQuery || `Great Value ${cleanName}`)
@@ -300,16 +256,16 @@ ${recipeText}`;
       return {
         id: `ing-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
         name: cleanName,
-        rawText: ing.rawText || `${ing.amount || 1} ${ing.unit || ''} ${cleanName}`,
-        amount: typeof ing.amount === 'number' ? ing.amount : 1,
-        unit: ing.unit || 'unit',
+        rawText: ing.rawText || `${amount} ${unit} ${cleanName}`,
+        amount,
+        unit,
         category,
         walmartQuery,
         walmartSearchUrl: searchUrl,
         walmartDirectAddUrl: searchUrl,
         brandTier: brandPreference,
         estimatedPrice: ing.estimatedPrice || 2.48,
-        packageSize: ing.packageSize || '1 standard pack',
+        packageSize,
         isPantryStaple: Boolean(ing.isPantryStaple),
         inPantry: Boolean(ing.isPantryStaple),
       };
@@ -398,9 +354,12 @@ CRITICAL GROCERY RULES:
 
     const parsedData = JSON.parse(response.text || '{}');
     const enhancedIngredients = (parsedData.ingredients || []).map((ing: any, idx: number) => {
-      const cleaned = cleanIngredientNameForWalmart(ing.name || 'Ingredient');
-      const cleanName = cleaned.cleanName;
+      const parsedRaw = parseIngredientLine(ing.rawText || `${ing.amount || ''} ${ing.unit || ''} ${ing.name || ''}`);
+      const cleanName = ing.name ? parseIngredientLine(ing.name).cleanName : parsedRaw.cleanName;
       const category = ing.category || 'Pantry & Dry Goods';
+      const amount = typeof ing.amount === 'number' && !isNaN(ing.amount) && ing.amount > 0 ? ing.amount : parsedRaw.amount;
+      const unit = ing.unit && ing.unit !== 'item' && ing.unit !== 'unit' ? ing.unit : parsedRaw.unit;
+      const packageSize = ing.packageSize && !ing.packageSize.includes('standard pack') ? ing.packageSize : (parsedRaw.extractedPackageSize || '1 package');
 
       let walmartQuery = (ing.walmartQuery || `Great Value ${cleanName}`)
         .replace(/\b(diced|minced|sliced|chopped|drained|rinsed|divided|to taste)\b/gi, '')
@@ -412,16 +371,16 @@ CRITICAL GROCERY RULES:
       return {
         id: `gen-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
         name: cleanName,
-        rawText: ing.rawText || `${ing.amount} ${ing.unit} ${cleanName}`,
-        amount: ing.amount || 1,
-        unit: ing.unit || 'unit',
+        rawText: ing.rawText || `${amount} ${unit} ${cleanName}`,
+        amount,
+        unit,
         category,
         walmartQuery,
         walmartSearchUrl: searchUrl,
         walmartDirectAddUrl: searchUrl,
         brandTier: 'great_value' as const,
         estimatedPrice: ing.estimatedPrice || 2.48,
-        packageSize: ing.packageSize || '1 pack',
+        packageSize,
         isPantryStaple: Boolean(ing.isPantryStaple),
         inPantry: Boolean(ing.isPantryStaple),
       };

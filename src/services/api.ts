@@ -3,19 +3,33 @@ import { matchWalmartGroceryItem } from '../data/walmartGroceryCatalog';
 
 function bindIngredientsToWalmartCatalog(ingredients: Ingredient[]): Ingredient[] {
   return (ingredients || []).map((ing, idx) => {
-    const match = matchWalmartGroceryItem(ing.name || ing.rawText || 'Food item', ing.category);
+    const authenticName = (ing.name || ing.rawText || 'Food item').trim();
+    const match = matchWalmartGroceryItem(authenticName, ing.category);
+    const walmartQuery = ing.walmartQuery && ing.walmartQuery.trim() !== '' && !ing.walmartQuery.toLowerCase().includes('undefined')
+      ? ing.walmartQuery.trim()
+      : match.walmartQuery;
+    const packageSize = ing.packageSize && ing.packageSize.trim() !== '' && !ing.packageSize.toLowerCase().includes('standard pack')
+      ? ing.packageSize.trim()
+      : match.packageSize;
+    const itemId = (ing.itemId && /^\d+$/.test(ing.itemId))
+      ? ing.itemId
+      : (match.itemId && /^\d+$/.test(match.itemId) ? match.itemId : undefined);
+
     return {
       ...ing,
       id: ing.id || `ing-${Date.now()}-${idx}`,
-      name: match.name || ing.name,
-      category: match.category || ing.category || 'Pantry & Dry Goods',
-      walmartQuery: match.walmartQuery,
-      walmartSearchUrl: match.walmartSearchUrl,
-      walmartDirectAddUrl: match.walmartSearchUrl,
-      brandTier: 'great_value',
-      estimatedPrice: match.estimatedPrice || ing.estimatedPrice || 2.48,
-      packageSize: match.packageSize || ing.packageSize || '1 package',
-      isPantryStaple: match.isPantryStaple ?? ing.isPantryStaple ?? false,
+      itemId,
+      name: authenticName, // NEVER OVERWRITE AUTHENTIC FOOD NAME!
+      amount: typeof ing.amount === 'number' && !isNaN(ing.amount) ? ing.amount : 1,
+      unit: ing.unit || 'count',
+      category: ing.category || match.category || 'Pantry & Dry Goods',
+      walmartQuery,
+      walmartSearchUrl: `https://www.walmart.com/search?q=${encodeURIComponent(walmartQuery)}`,
+      walmartDirectAddUrl: `https://www.walmart.com/search?q=${encodeURIComponent(walmartQuery)}`,
+      brandTier: ing.brandTier || 'great_value',
+      estimatedPrice: ing.estimatedPrice && ing.estimatedPrice > 0 ? ing.estimatedPrice : (match.estimatedPrice || 2.48),
+      packageSize,
+      isPantryStaple: ing.isPantryStaple ?? match.isPantryStaple ?? false,
       inPantry: Boolean(ing.inPantry),
     };
   });

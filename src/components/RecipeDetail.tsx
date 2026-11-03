@@ -176,6 +176,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
     const newId = `custom-ing-${Date.now()}`;
     const newIngredient: Ingredient = {
       id: newId,
+      itemId: match.itemId,
       name: newIngName.trim(),
       rawText: `${newIngAmount} ${newIngUnit} ${newIngName.trim()}`,
       amount: parseFloat(newIngAmount) || 1,

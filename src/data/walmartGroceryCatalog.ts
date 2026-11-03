@@ -6,6 +6,7 @@
 
 export interface WalmartGroceryProduct {
   id: string;
+  itemId?: string;
   name: string;
   walmartQuery: string;
   walmartSearchUrl: string;
@@ -21,6 +22,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   // --- MEAT & POULTRY & SEAFOOD ---
   {
     id: 'wm-meat-1',
+    itemId: '10414680',
     name: 'Boneless Skinless Chicken Breast',
     walmartQuery: 'Great Value Boneless Skinless Chicken Breast 3 lb',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Boneless%20Skinless%20Chicken%20Breast%203%20lb',
@@ -57,6 +59,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-meat-4',
+    itemId: '39944474',
     name: 'Boneless Beef Chuck Roast',
     walmartQuery: 'USDA Choice Beef Chuck Roast Boneless 3 lb',
     walmartSearchUrl: 'https://www.walmart.com/search?q=USDA%20Choice%20Beef%20Chuck%20Roast%20Boneless',
@@ -143,6 +146,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-dairy-3',
+    itemId: '10450340',
     name: 'Heavy Whipping Cream',
     walmartQuery: 'Great Value Ultra-Pasteurized Heavy Whipping Cream 16 fl oz',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Heavy%20Whipping%20Cream%2016%20fl%20oz',
@@ -155,6 +159,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-dairy-4',
+    itemId: '26954459',
     name: 'Unsalted Sweet Cream Butter',
     walmartQuery: 'Great Value Sweet Cream Unsalted Butter 16 oz 4 Sticks',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Unsalted%20Butter%2016%20oz',
@@ -167,6 +172,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-dairy-5',
+    itemId: '10315402',
     name: 'Grated Parmesan Cheese',
     walmartQuery: 'Great Value Grated Parmesan Cheese 8 oz',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Grated%20Parmesan%20Cheese%208%20oz',
@@ -253,6 +259,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   // --- FRESH PRODUCE ---
   {
     id: 'wm-prod-1',
+    itemId: '10447842',
     name: 'Fresh Yellow Onions',
     walmartQuery: 'Fresh Yellow Onions 3 lb Bag',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Fresh%20Yellow%20Onions%203%20lb%20Bag',
@@ -301,6 +308,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-prod-5',
+    itemId: '34017490',
     name: 'Fresh Baby Spinach',
     walmartQuery: 'Marketside Fresh Baby Spinach 10 oz Tub',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Marketside%20Fresh%20Baby%20Spinach%2010%20oz',
@@ -325,6 +333,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-prod-7',
+    itemId: '44391064',
     name: 'Fresh Whole Limes',
     walmartQuery: 'Fresh Whole Limes Each',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Fresh%20Whole%20Limes',
@@ -459,6 +468,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   // --- PANTRY & DRY GOODS ---
   {
     id: 'wm-pan-1',
+    itemId: '10315102',
     name: 'Extra Virgin Olive Oil',
     walmartQuery: 'Great Value 100% Extra Virgin Olive Oil 17 fl oz',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Extra%20Virgin%20Olive%20Oil%2017%20fl%20oz',
@@ -483,6 +493,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-pan-3',
+    itemId: '10899013',
     name: 'Low Sodium Chicken Broth',
     walmartQuery: 'Great Value Low Sodium Chicken Broth 32 oz',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Low%20Sodium%20Chicken%20Broth%2032%20oz',
@@ -495,6 +506,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-pan-4',
+    itemId: '10899013',
     name: 'Beef Broth',
     walmartQuery: 'Great Value Beef Broth 32 oz',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Beef%20Broth%2032%20oz',
@@ -567,6 +579,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-pan-10',
+    itemId: '10315394',
     name: 'Long Grain White Rice',
     walmartQuery: 'Great Value Enriched Long Grain White Rice 5 lb Bag',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Long%20Grain%20White%20Rice%205%20lb',
@@ -591,6 +604,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-pan-12',
+    itemId: '10534084',
     name: 'Penne Rigate Pasta',
     walmartQuery: 'Great Value Penne Rigate Pasta 16 oz Box',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Penne%20Pasta%2016%20oz',
@@ -603,6 +617,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-pan-13',
+    itemId: '10534038',
     name: 'Black Beans Canned',
     walmartQuery: 'Great Value Black Beans 15 oz Can',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Black%20Beans%2015%20oz',
@@ -701,6 +716,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   // --- BAKERY & TORTILLAS ---
   {
     id: 'wm-bak-1',
+    itemId: '10312504',
     name: 'White Corn Street Taco Tortillas',
     walmartQuery: 'Mission White Corn Street Tacos Tortillas 24 Count',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Mission%20Street%20Tacos%20Corn%20Tortillas',

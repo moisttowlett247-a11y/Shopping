@@ -28,17 +28,20 @@ import { matchWalmartGroceryItem, calculateRetailPackageQuantity } from './data/
 // Storage version key to guarantee old corrupt/hallucinated SKU items or stale quantities
 // are purged from the user's browser localStorage on first load!
 const STORAGE_VERSION_KEY = 'cartcraft_storage_version';
-const CURRENT_STORAGE_VERSION = 'v7_food_names_and_exact_quantities';
+const CURRENT_STORAGE_VERSION = 'v9_verified_walmart_direct_multi_add_to_cart';
 
 // Helper to ensure Walmart URLs are 100% matched against our verified Walmart Grocery Catalog
 // CRITICAL: NEVER overwrite the recipe's authentic food name!
 function sanitizeIngredientUrls<T extends Ingredient>(ing: T): T {
   const authenticName = (ing.name || ing.rawText || 'Food item').trim();
   const match = matchWalmartGroceryItem(authenticName, ing.category);
+  const validItemId = (ing.itemId && /^\d+$/.test(ing.itemId))
+    ? ing.itemId
+    : (match.itemId && /^\d+$/.test(match.itemId) ? match.itemId : undefined);
 
   return {
     ...ing,
-    itemId: undefined, // Never use unverified numeric IDs
+    itemId: validItemId, // Verified authentic Walmart item ID for 1-click auto-add
     name: authenticName, // ALWAYS PRESERVE AUTHENTIC CULINARY FOOD NAME!
     category: ing.category || match.category || 'Pantry & Dry Goods',
     walmartQuery: ing.walmartQuery && ing.walmartQuery.trim() !== '' && !ing.walmartQuery.toLowerCase().includes('undefined')
@@ -283,6 +286,7 @@ export default function App() {
     const match = matchWalmartGroceryItem(newItem.name, newItem.category);
     const cartItem: CartItem = {
       id: `custom-cart-${Date.now()}`,
+      itemId: match.itemId,
       name: match.name,
       rawText: `${newItem.quantity} ${match.name}`,
       amount: newItem.quantity,

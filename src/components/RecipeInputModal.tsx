@@ -3,6 +3,7 @@ import { X, Sparkles, FileText, Plus, Loader2, ArrowRight } from 'lucide-react';
 import { Recipe, Ingredient } from '../types';
 import { parseRecipeText, generateAiRecipe } from '../services/api';
 import { matchWalmartGroceryItem } from '../data/walmartGroceryCatalog';
+import { parseIngredientLine } from '../utils/ingredientParser';
 
 interface RecipeInputModalProps {
   isOpen: boolean;
@@ -81,27 +82,30 @@ export const RecipeInputModal: React.FC<RecipeInputModalProps> = ({
     }
   };
 
-  // Handle Tab 3: Manual Recipe Build
+  // Handle Tab 3: Manual Recipe Build with accurate quantity and food extraction
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!manualTitle.trim()) return;
 
     const rawIngLines = manualIngredientInput.split('\n').filter((l) => l.trim().length > 0);
     const ingredients: Ingredient[] = rawIngLines.map((line, idx) => {
-      const cleanName = line.replace(/^[-*•\d+.]\s*/, '').trim();
-      const match = matchWalmartGroceryItem(cleanName);
+      const parsed = parseIngredientLine(line);
+      const match = matchWalmartGroceryItem(parsed.cleanName);
+      const packageSize = parsed.extractedPackageSize || match.packageSize || '1 package';
+
       return {
         id: `manual-ing-${Date.now()}-${idx}`,
-        name: match.name,
+        itemId: match.itemId,
+        name: parsed.cleanName, // Keep authentic food name
         rawText: line,
-        amount: 1,
-        unit: 'item',
+        amount: parsed.amount, // Real parsed numerical amount (e.g. 4, 1.5, 0.5, 18)
+        unit: parsed.unit, // Real unit (e.g. count, lbs, cups, cloves, cans)
         category: match.category,
         walmartQuery: match.walmartQuery,
         walmartSearchUrl: match.walmartSearchUrl,
         brandTier: 'great_value',
         estimatedPrice: match.estimatedPrice,
-        packageSize: match.packageSize,
+        packageSize,
         isPantryStaple: match.isPantryStaple,
         inPantry: false,
       };

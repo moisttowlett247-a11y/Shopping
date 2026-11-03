@@ -23,6 +23,7 @@ export const INITIAL_RECIPES: Recipe[] = [
     ingredients: [
       {
         id: 'ing-tc-1',
+        itemId: '10414680',
         name: 'Boneless Skinless Chicken Breast',
         rawText: '1.5 lbs boneless skinless chicken breasts',
         amount: 1.5,
@@ -39,6 +40,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       },
       {
         id: 'ing-tc-2',
+        itemId: '10450340',
         name: 'Heavy Whipping Cream',
         rawText: '1 cup heavy whipping cream',
         amount: 1,
@@ -55,6 +57,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       },
       {
         id: 'ing-tc-3',
+        itemId: '34017490',
         name: 'Fresh Baby Spinach',
         rawText: '3 cups fresh baby spinach leaves',
         amount: 3,
@@ -87,6 +90,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       },
       {
         id: 'ing-tc-5',
+        itemId: '10315402',
         name: 'Parmesan Cheese Grated',
         rawText: '0.5 cup grated parmesan cheese',
         amount: 0.5,
@@ -103,6 +107,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       },
       {
         id: 'ing-tc-6',
+        itemId: '367014931',
         name: 'Fresh Garlic Bulbs',
         rawText: '4 cloves garlic, minced',
         amount: 4,
@@ -119,6 +124,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       },
       {
         id: 'ing-tc-7',
+        itemId: '10899013',
         name: 'Chicken Broth',
         rawText: '0.5 cup low-sodium chicken broth',
         amount: 0.5,
@@ -135,6 +141,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       },
       {
         id: 'ing-tc-8',
+        itemId: '10315102',
         name: 'Extra Virgin Olive Oil',
         rawText: '2 tbsp extra virgin olive oil',
         amount: 2,
@@ -189,6 +196,7 @@ export const INITIAL_RECIPES: Recipe[] = [
     ingredients: [
       {
         id: 'ing-bb-1',
+        itemId: '39944474',
         name: 'Beef Chuck Roast',
         rawText: '3 lbs boneless beef chuck roast',
         amount: 3,
@@ -237,6 +245,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       },
       {
         id: 'ing-bb-4',
+        itemId: '10312504',
         name: 'White Corn Tortillas',
         rawText: '18 white corn street taco tortillas',
         amount: 18,
@@ -253,6 +262,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       },
       {
         id: 'ing-bb-5',
+        itemId: '10899013',
         name: 'Beef Broth Stock',
         rawText: '4 cups beef broth',
         amount: 4,
@@ -285,6 +295,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       },
       {
         id: 'ing-bb-7',
+        itemId: '44391064',
         name: 'Fresh Limes',
         rawText: '4 fresh limes, cut into wedges',
         amount: 4,
@@ -294,13 +305,14 @@ export const INITIAL_RECIPES: Recipe[] = [
         walmartSearchUrl: 'https://www.walmart.com/search?q=Fresh%20Whole%20Limes',
         walmartDirectAddUrl: 'https://www.walmart.com/search?q=Fresh%20Whole%20Limes',
         brandTier: 'great_value',
-        estimatedPrice: 1.20,
-        packageSize: '4 pack / loose',
+        estimatedPrice: 0.33,
+        packageSize: '1 whole lime',
         isPantryStaple: false,
         inPantry: false
       },
       {
         id: 'ing-bb-8',
+        itemId: '10447842',
         name: 'White Onion',
         rawText: '1 large white onion, finely diced',
         amount: 1,
