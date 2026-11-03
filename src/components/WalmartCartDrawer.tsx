@@ -111,6 +111,8 @@ export const WalmartCartDrawer: React.FC<WalmartCartDrawerProps> = ({
       ? `https://www.walmart.com/sc/cart/addToCart?items=${verifiedAutoAddItems
           .map((i) => `${i.itemId}|${i.orderQuantity}`)
           .join(',')}`
+      : cartItems.length > 0 && cartItems[0]?.walmartSearchUrl
+      ? cartItems[0].walmartSearchUrl
       : 'https://www.walmart.com/cart';
 
   // Pick suggestion from verified catalog
@@ -529,11 +531,11 @@ export const WalmartCartDrawer: React.FC<WalmartCartDrawerProps> = ({
                             {/* Actions: View match and Remove item */}
                             <div className="flex items-center gap-1 shrink-0">
                               <a
-                                href={item.walmartSearchUrl}
+                                href={item.itemId && /^\d+$/.test(item.itemId) ? `https://www.walmart.com/ip/${item.itemId}` : item.walmartSearchUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                title="View exact food match on Walmart.com"
+                                title={item.itemId ? `View product #${item.itemId} on Walmart.com` : 'View exact food match on Walmart.com'}
                               >
                                 <ExternalLink className="w-3.5 h-3.5" />
                               </a>
@@ -628,11 +630,11 @@ export const WalmartCartDrawer: React.FC<WalmartCartDrawerProps> = ({
 
                           <div className="flex items-center gap-1 shrink-0">
                             <a
-                              href={item.walmartSearchUrl}
+                              href={item.itemId && /^\d+$/.test(item.itemId) ? `https://www.walmart.com/ip/${item.itemId}` : item.walmartSearchUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                              title="View product match on Walmart.com"
+                              title={item.itemId ? `View product #${item.itemId} on Walmart.com` : 'View product match on Walmart.com'}
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
                             </a>

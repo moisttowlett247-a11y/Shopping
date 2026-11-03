@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Sparkles, Plus, ChefHat, ArrowRight } from 'lucide-react';
+import { heroImg } from '../assets/images';
 
 interface HeroProps {
   onOpenRecipeInput: (tab?: 'paste' | 'manual' | 'ai') => void;
@@ -87,7 +88,7 @@ export const Hero: React.FC<HeroProps> = ({
             <div className="relative w-full aspect-4/3 lg:aspect-auto lg:h-full rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-sm">
               {imgLoaded ? (
                 <img
-                  src="/src/assets/images/hero_culinary_groceries_1793564753906.jpg"
+                  src={heroImg}
                   alt="Fresh culinary grocery ingredients ready for Walmart shopping"
                   className="w-full h-full object-cover"
                   referrerPolicy="no-referrer"

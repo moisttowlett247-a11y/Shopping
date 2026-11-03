@@ -358,6 +358,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-prod-9',
+    itemId: '44391605',
     name: 'Fresh Strawberries',
     walmartQuery: 'Fresh Strawberries 1 lb Clamshell',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Fresh%20Strawberries%201%20lb',
@@ -370,6 +371,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-prod-10',
+    itemId: '161115457',
     name: 'Fresh Blueberries',
     walmartQuery: 'Fresh Blueberries 11 oz Container',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Fresh%20Blueberries%2011%20oz',

@@ -4,6 +4,7 @@ import { Recipe, Ingredient } from '../types';
 import { parseRecipeText, generateAiRecipe } from '../services/api';
 import { matchWalmartGroceryItem } from '../data/walmartGroceryCatalog';
 import { parseIngredientLine } from '../utils/ingredientParser';
+import { heroImg } from '../assets/images';
 
 interface RecipeInputModalProps {
   isOpen: boolean;
@@ -126,7 +127,7 @@ export const RecipeInputModal: React.FC<RecipeInputModalProps> = ({
       baseServings: manualServings || 4,
       cuisine: manualCuisine || 'General',
       tags: ['Custom Recipe'],
-      image: '/src/assets/images/hero_culinary_groceries_1793564753906.jpg',
+      image: heroImg,
       instructions: instructions.length > 0 ? instructions : ['Prepare ingredients and cook to taste.'],
       ingredients,
       isCustom: true,

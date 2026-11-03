@@ -28,7 +28,7 @@ import { matchWalmartGroceryItem, calculateRetailPackageQuantity } from './data/
 // Storage version key to guarantee old corrupt/hallucinated SKU items or stale quantities
 // are purged from the user's browser localStorage on first load!
 const STORAGE_VERSION_KEY = 'cartcraft_storage_version';
-const CURRENT_STORAGE_VERSION = 'v9_verified_walmart_direct_multi_add_to_cart';
+const CURRENT_STORAGE_VERSION = 'v10_verified_walmart_complete_grocery_suite';
 
 // Helper to ensure Walmart URLs are 100% matched against our verified Walmart Grocery Catalog
 // CRITICAL: NEVER overwrite the recipe's authentic food name!

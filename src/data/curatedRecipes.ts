@@ -1,4 +1,5 @@
 import { Recipe } from '../types';
+import { tuscanImg, birriaImg, parfaitImg } from '../assets/images';
 
 export const INITIAL_RECIPES: Recipe[] = [
   {
@@ -11,7 +12,7 @@ export const INITIAL_RECIPES: Recipe[] = [
     baseServings: 4,
     cuisine: 'Italian-American',
     tags: ['Skillet Dinner', 'High Protein', 'Weeknight Favorite'],
-    image: '/src/assets/images/recipe_creamy_tuscan_1793564754877.jpg',
+    image: tuscanImg,
     instructions: [
       'Season chicken breasts generously with Italian herbs, salt, and black pepper on both sides.',
       'Heat 2 tablespoons of olive oil in a large skillet over medium-high heat. Sear chicken 5-7 minutes per side until golden brown and cooked through (165°F). Remove and set aside.',
@@ -184,7 +185,7 @@ export const INITIAL_RECIPES: Recipe[] = [
     baseServings: 6,
     cuisine: 'Mexican',
     tags: ['Slow Cook', 'Authentic', 'Crowd Pleaser'],
-    image: '/src/assets/images/recipe_beef_birria_1793564755667.jpg',
+    image: birriaImg,
     instructions: [
       'Toast dried guajillo and ancho chiles in a dry pan for 2 minutes, then rehydrate in 2 cups of boiling water for 15 minutes. Blend with onion, garlic, apple cider vinegar, and Mexican spices into a smooth adobo sauce.',
       'Cut beef chuck roast into 3-inch chunks. Season generously with salt and black pepper.',
@@ -339,7 +340,7 @@ export const INITIAL_RECIPES: Recipe[] = [
     baseServings: 2,
     cuisine: 'Breakfast & Cafe',
     tags: ['No-Cook', 'High Protein', 'Breakfast Energy'],
-    image: '/src/assets/images/recipe_berry_parfait_1793564755669.jpg',
+    image: parfaitImg,
     instructions: [
       'In serving bowls, divide thick whole-milk Greek yogurt as the base.',
       'Top generously with toasted oats & honey granola on one side.',
@@ -366,6 +367,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       },
       {
         id: 'ing-bp-2',
+        itemId: '44391605',
         name: 'Fresh Strawberries',
         rawText: '1 pint fresh strawberries, sliced',
         amount: 1,
@@ -382,6 +384,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       },
       {
         id: 'ing-bp-3',
+        itemId: '161115457',
         name: 'Fresh Blueberries',
         rawText: '1 cup fresh wild blueberries',
         amount: 1,
