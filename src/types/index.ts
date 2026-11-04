@@ -41,6 +41,8 @@ export interface SubstitutionOption {
   walmartDirectAddUrl?: string;
   itemId?: string;
   estimatedPrice: number;
+  isGreatValue?: boolean;
+  savingsVsOriginal?: number;
 }
 
 export interface CartItem extends Ingredient {

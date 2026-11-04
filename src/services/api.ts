@@ -1,5 +1,5 @@
 import { Recipe, SubstitutionOption, Ingredient } from '../types';
-import { matchWalmartGroceryItem, searchWalmartCatalog } from '../data/walmartGroceryCatalog';
+import { matchWalmartGroceryItem, searchWalmartCatalog, findGreatValueSubstitution } from '../data/walmartGroceryCatalog';
 import { parseIngredientLine } from '../utils/ingredientParser';
 import { heroImg } from '../assets/images';
 
@@ -32,7 +32,7 @@ function bindIngredientsToWalmartCatalog(ingredients: Ingredient[]): Ingredient[
       estimatedPrice: ing.estimatedPrice && ing.estimatedPrice > 0 ? ing.estimatedPrice : (match.estimatedPrice || 2.48),
       packageSize,
       isPantryStaple: ing.isPantryStaple ?? match.isPantryStaple ?? false,
-      inPantry: Boolean(ing.inPantry),
+      inPantry: false, // CRITICAL: NEVER mark in pantry by default! Every item must be added to cart.
     };
   });
 }
@@ -143,7 +143,7 @@ function clientSideGenerateRecipe(prompt: string, servings: number = 4, budget: 
   const candidateNames: string[] = [];
 
   if (p.includes('chicken')) {
-    candidateNames.push('Boneless Skinless Chicken Breast', 'Extra Virgin Olive Oil', 'Fresh Garlic Bulbs', 'Fresh Yellow Onions');
+    candidateNames.push('Fresh Whole Rotisserie Chicken', 'Extra Virgin Olive Oil', 'Fresh Garlic Bulbs', 'Fresh Yellow Onions');
   } else if (p.includes('beef') || p.includes('taco') || p.includes('steak')) {
     candidateNames.push('80/20 Ground Beef', 'White Corn Street Taco Tortillas', 'Fresh Yellow Onions', 'Fresh Cilantro');
   } else if (p.includes('pasta') || p.includes('italian')) {
@@ -151,8 +151,8 @@ function clientSideGenerateRecipe(prompt: string, servings: number = 4, budget: 
   } else if (p.includes('salmon') || p.includes('fish')) {
     candidateNames.push('Atlantic Salmon Fillets', 'Fresh Whole Lemons', 'Unsalted Sweet Cream Butter', 'Fresh Garlic Bulbs');
   } else {
-    // General delicious dish
-    candidateNames.push('Boneless Skinless Chicken Breast', 'Long Grain White Rice', 'Fresh Baby Spinach', 'Extra Virgin Olive Oil', 'Fresh Garlic Bulbs');
+    // General delicious dish with default rotisserie chicken
+    candidateNames.push('Fresh Whole Rotisserie Chicken', 'Long Grain White Rice', 'Fresh Baby Spinach', 'Extra Virgin Olive Oil', 'Fresh Garlic Bulbs');
   }
 
   // Add seasonings and staples
@@ -175,7 +175,7 @@ function clientSideGenerateRecipe(prompt: string, servings: number = 4, budget: 
       estimatedPrice: match.estimatedPrice,
       packageSize: match.packageSize,
       isPantryStaple: match.isPantryStaple,
-      inPantry: match.isPantryStaple,
+      inPantry: false, // CRITICAL: NEVER mark in pantry by default! Every item is added to cart.
     };
   });
 
@@ -191,10 +191,10 @@ function clientSideGenerateRecipe(prompt: string, servings: number = 4, budget: 
     tags: ['AI Recipe', budget === 'budget_friendly' ? 'Budget Friendly' : 'Gourmet'],
     image: heroImg,
     instructions: [
-      'Prepare and rinse all fresh ingredients.',
+      'Prepare and shred or dice the fresh ingredients.',
       'Heat olive oil in a skillet or pan over medium-high heat.',
-      'Sauté the aromatics and cook the protein until golden and cooked through.',
-      'Simmer with sauce and vegetables until tender.',
+      'Sauté the aromatics and fold in the rotisserie chicken until heated through.',
+      'Simmer with sauce and vegetables until tender and fragrant.',
       'Season to taste and serve warm.'
     ],
     ingredients,
@@ -204,32 +204,25 @@ function clientSideGenerateRecipe(prompt: string, servings: number = 4, budget: 
 }
 
 /**
- * Intelligent Client-Side Ingredient Substitutions for standalone GitHub Pages hosting
+ * Intelligent Client-Side Ingredient Substitutions with Great Value store brand priority
  */
-function clientSideSubstitutions(ingredientName: string): SubstitutionOption[] {
-  const matches = searchWalmartCatalog(ingredientName, 3);
-  if (matches.length > 0) {
-    return matches.map((m) => ({
+function clientSideSubstitutions(ingredientName: string, originalPrice?: number): SubstitutionOption[] {
+  const gvOption = findGreatValueSubstitution(ingredientName, originalPrice);
+  const catalogMatches = searchWalmartCatalog(ingredientName, 5)
+    .filter((m) => m.name.toLowerCase() !== gvOption.name.toLowerCase() && m.itemId !== gvOption.itemId)
+    .slice(0, 3)
+    .map((m) => ({
       name: m.name,
       explanation: `Verified alternative available at Walmart (${m.packageSize}).`,
       walmartQuery: m.walmartQuery,
       walmartSearchUrl: m.walmartSearchUrl,
-      walmartDirectAddUrl: m.walmartSearchUrl,
+      walmartDirectAddUrl: m.itemId ? `https://www.walmart.com/ip/${m.itemId}` : m.walmartSearchUrl,
       itemId: m.itemId,
       estimatedPrice: m.estimatedPrice,
+      isGreatValue: m.brand === 'Great Value' || m.name.toLowerCase().includes('great value'),
     }));
-  }
 
-  return [
-    {
-      name: `Great Value Alternative for ${ingredientName}`,
-      explanation: 'Verified Walmart store-brand pantry alternative.',
-      walmartQuery: `Great Value ${ingredientName}`,
-      walmartSearchUrl: `https://www.walmart.com/search?q=${encodeURIComponent(`Great Value ${ingredientName}`)}`,
-      walmartDirectAddUrl: `https://www.walmart.com/search?q=${encodeURIComponent(`Great Value ${ingredientName}`)}`,
-      estimatedPrice: 2.48,
-    },
-  ];
+  return [gvOption, ...catalogMatches];
 }
 
 export async function parseRecipeText(recipeText: string, brandPreference: string = 'great_value'): Promise<Recipe> {
@@ -292,28 +285,43 @@ export async function generateAiRecipe(prompt: string, servings: number = 4, bud
   return clientSideGenerateRecipe(prompt, servings, budget, cuisine);
 }
 
-export async function getIngredientSubstitutions(ingredientName: string, reason: string = 'budget'): Promise<SubstitutionOption[]> {
+export async function getIngredientSubstitutions(ingredientName: string, reason: string = 'budget', originalPrice?: number): Promise<SubstitutionOption[]> {
   try {
     const res = await fetch('/api/recipe/substitute', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ingredientName, reason }),
+      body: JSON.stringify({ ingredientName, reason, originalPrice }),
     });
     if (res.ok) {
       const data = await res.json();
       if (data.substitutions && Array.isArray(data.substitutions)) {
-        return data.substitutions.map((sub: any) => {
+        const mapped: SubstitutionOption[] = data.substitutions.map((sub: any) => {
           const match = matchWalmartGroceryItem(sub.name || ingredientName);
+          const isGV = (sub.name && sub.name.toLowerCase().includes('great value')) ||
+                       (match.brand === 'Great Value') ||
+                       (match.name.toLowerCase().includes('great value'));
           return {
             name: match.name,
             explanation: sub.explanation || 'Verified alternative food product at Walmart.',
             walmartQuery: match.walmartQuery,
             walmartSearchUrl: match.walmartSearchUrl,
-            walmartDirectAddUrl: match.walmartSearchUrl,
+            walmartDirectAddUrl: match.itemId ? `https://www.walmart.com/ip/${match.itemId}` : match.walmartSearchUrl,
             itemId: match.itemId,
-            estimatedPrice: match.estimatedPrice,
+            estimatedPrice: sub.estimatedPrice || match.estimatedPrice,
+            isGreatValue: isGV,
+            savingsVsOriginal: originalPrice && originalPrice > (sub.estimatedPrice || match.estimatedPrice)
+              ? parseFloat((originalPrice - (sub.estimatedPrice || match.estimatedPrice)).toFixed(2))
+              : undefined,
           };
         });
+
+        // Ensure at least one Great Value option is at index 0
+        const hasGV = mapped.some((s) => s.isGreatValue);
+        if (!hasGV) {
+          const gvOption = findGreatValueSubstitution(ingredientName, originalPrice);
+          return [gvOption, ...mapped];
+        }
+        return mapped;
       }
     }
   } catch (err) {
@@ -321,5 +329,6 @@ export async function getIngredientSubstitutions(ingredientName: string, reason:
   }
 
   // Instant zero-failure fallback for static GitHub Pages hosting
-  return clientSideSubstitutions(ingredientName);
+  return clientSideSubstitutions(ingredientName, originalPrice);
 }
+

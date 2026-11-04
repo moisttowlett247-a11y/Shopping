@@ -267,7 +267,7 @@ ${recipeText}`;
         estimatedPrice: ing.estimatedPrice || 2.48,
         packageSize,
         isPantryStaple: Boolean(ing.isPantryStaple),
-        inPantry: Boolean(ing.isPantryStaple),
+        inPantry: false, // CRITICAL: NEVER mark in pantry by default! Every recipe item must go into cart.
       };
     });
 
@@ -295,7 +295,7 @@ app.post('/api/recipe/generate', async (req: Request, res: Response) => {
     }
 
     if (!ai) {
-      const sample = fallbackParseRecipe(`Delicious ${userPrompt}\n- 1 lb chicken breast\n- 2 tbsp olive oil\n- 1 tsp salt\n- 1 diced onion\n- 2 cloves garlic\n- 1 cup white rice\nInstructions:\n1. Cook ingredients\n2. Season and serve.`);
+      const sample = fallbackParseRecipe(`Delicious ${userPrompt}\n- 1 whole rotisserie chicken\n- 2 tbsp olive oil\n- 1 tsp salt\n- 1 diced onion\n- 2 cloves garlic\n- 1 cup white rice\nInstructions:\n1. Shred rotisserie chicken and cook aromatics\n2. Combine and season to serve.`);
       sample.title = userPrompt;
       return res.json({ recipe: sample, source: 'fallback' });
     }
@@ -307,9 +307,11 @@ Target servings: ${servings}
 Budget level: ${budget} (Prioritize Great Value budget grocery items where possible).
 
 CRITICAL GROCERY RULES:
+- For any chicken dish or generic poultry, default to "Freshness Guaranteed Traditional Rotisserie Whole Chicken 2.25 lb" or Great Value chicken.
+- Never mark ingredients as in-pantry by default; all items must default to inPantry: false so they can be added to the Walmart shopping cart.
 - Only return real FOOD AND GROCERY ingredients sold at Walmart supermarkets.
 - Never include non-food items, cosmetics, makeup, or hardware.
-- Provide clean, exact Walmart search queries (e.g. "Great Value Boneless Skinless Chicken Breast 3 lb", "Great Value Long Grain Enriched White Rice 5 lb").
+- Provide clean, exact Walmart search queries (e.g. "Freshness Guaranteed Traditional Rotisserie Whole Chicken 2.25 lb", "Great Value Long Grain Enriched White Rice 5 lb").
 - Do NOT include preparation words in walmartQuery.`;
 
     const response = await ai.models.generateContent({
@@ -382,7 +384,7 @@ CRITICAL GROCERY RULES:
         estimatedPrice: ing.estimatedPrice || 2.48,
         packageSize,
         isPantryStaple: Boolean(ing.isPantryStaple),
-        inPantry: Boolean(ing.isPantryStaple),
+        inPantry: false, // CRITICAL: NEVER mark in pantry by default!
       };
     });
 
@@ -402,7 +404,7 @@ CRITICAL GROCERY RULES:
 // Endpoint: Ingredient substitution suggestion with Walmart product links
 app.post('/api/recipe/substitute', async (req: Request, res: Response) => {
   try {
-    const { ingredientName, reason = 'budget' } = req.body;
+    const { ingredientName, reason = 'budget', originalPrice } = req.body;
 
     if (!ingredientName) {
       return res.status(400).json({ error: 'ingredientName is required' });
@@ -412,24 +414,27 @@ app.post('/api/recipe/substitute', async (req: Request, res: Response) => {
       return res.json({
         substitutions: [
           {
-            name: `Great Value Alternative for ${ingredientName}`,
-            description: 'Affordable Walmart store brand alternative.',
+            name: `Great Value ${ingredientName}`,
+            explanation: 'Official Walmart Great Value store brand alternative with everyday low prices.',
             walmartQuery: `Great Value ${ingredientName}`,
             walmartSearchUrl: buildWalmartSearchUrl(`Great Value ${ingredientName}`),
-            estimatedPrice: 2.18,
+            estimatedPrice: originalPrice ? Math.max(0.98, parseFloat((originalPrice * 0.72).toFixed(2))) : 2.18,
           },
         ],
       });
     }
 
     const prompt = `Provide 3 smart Walmart grocery substitutions for the food ingredient "${ingredientName}".
-Reason for substitution: ${reason} (e.g. budget, dairy-free, gluten-free, healthy, or out-of-stock).
+IMPORTANT STORE-BRAND RULE:
+- Always offer a Walmart "Great Value" store brand option as the PRIMARY substitution (or Freshness Guaranteed for rotisserie chicken/bakery) to ensure maximum cost savings for the shopper.
+- If the item is chicken, offer Freshness Guaranteed Traditional Rotisserie Chicken or Great Value chicken cut.
+Reason for substitution: ${reason} (e.g. budget, store-brand swap, dairy-free, gluten-free, healthy, or out-of-stock).
 Rules:
 - MUST be grocery/food products only!
 - Never return cosmetics or non-food products.
 For each substitution, provide:
-1. name
-2. explanation of how it works in recipes
+1. name (prefix with "Great Value" if it is the store brand option)
+2. explanation of how it works in recipes and why it saves money
 3. exact Walmart product search query (e.g. "Great Value Plain Greek Yogurt 32 oz")
 4. estimated price`;
 

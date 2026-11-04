@@ -61,12 +61,12 @@ export const HowItWorks: React.FC = () => {
             </p>
           </div>
           <a
-            href="https://www.walmart.com/cart"
+            href="https://www.walmart.com/cp/groceries/976759"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0071DC] hover:bg-[#005bb5] text-white text-xs font-bold rounded-lg shadow-xs transition-colors whitespace-nowrap cursor-pointer"
           >
-            <span>Visit Walmart.com Cart</span>
+            <span>Explore Walmart Grocery</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
           </a>
         </div>

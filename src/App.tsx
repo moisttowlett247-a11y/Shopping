@@ -28,7 +28,7 @@ import { matchWalmartGroceryItem, calculateRetailPackageQuantity } from './data/
 // Storage version key to guarantee old corrupt/hallucinated SKU items or stale quantities
 // are purged from the user's browser localStorage on first load!
 const STORAGE_VERSION_KEY = 'cartcraft_storage_version';
-const CURRENT_STORAGE_VERSION = 'v10_verified_walmart_complete_grocery_suite';
+const CURRENT_STORAGE_VERSION = 'v12_no_auto_pantry_rotisserie_chicken_great_value';
 
 // Helper to ensure Walmart URLs are 100% matched against our verified Walmart Grocery Catalog
 // CRITICAL: NEVER overwrite the recipe's authentic food name!
@@ -354,14 +354,18 @@ export default function App() {
     const match = matchWalmartGroceryItem(sub.name);
     const updatedIngredients = selectedRecipe.ingredients.map((ing) => {
       if (ing.id === ingredientId) {
+        const isGV = sub.isGreatValue || sub.name.toLowerCase().includes('great value') || match.brand === 'Great Value';
         return {
           ...ing,
-          name: match.name,
-          walmartQuery: match.walmartQuery,
-          walmartSearchUrl: match.walmartSearchUrl,
-          estimatedPrice: match.estimatedPrice,
+          itemId: sub.itemId || match.itemId,
+          name: sub.name || match.name,
+          walmartQuery: sub.walmartQuery || match.walmartQuery,
+          walmartSearchUrl: sub.walmartSearchUrl || match.walmartSearchUrl,
+          walmartDirectAddUrl: sub.walmartDirectAddUrl || match.walmartSearchUrl,
+          estimatedPrice: sub.estimatedPrice || match.estimatedPrice,
           packageSize: match.packageSize,
           category: match.category,
+          brandTier: (isGV ? 'great_value' : ing.brandTier) as any,
         };
       }
       return ing;
@@ -371,7 +375,7 @@ export default function App() {
       ...selectedRecipe,
       ingredients: updatedIngredients,
     });
-    showToast(`Applied verified food substitution: "${match.name}"`);
+    showToast(`Applied verified food substitution: "${sub.name || match.name}"`);
   };
 
   // Filtered recipes

@@ -21,6 +21,30 @@ export interface WalmartGroceryProduct {
 export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   // --- MEAT & POULTRY & SEAFOOD ---
   {
+    id: 'wm-meat-rotisserie',
+    itemId: '325918992',
+    name: 'Fresh Whole Rotisserie Chicken',
+    walmartQuery: 'Freshness Guaranteed Traditional Rotisserie Whole Chicken 2.25 lb',
+    walmartSearchUrl: 'https://www.walmart.com/search?q=Freshness%20Guaranteed%20Rotisserie%20Chicken',
+    category: 'Meat & Seafood',
+    brand: 'Freshness Guaranteed',
+    estimatedPrice: 5.97,
+    packageSize: '2.25 lb whole chicken',
+    isPantryStaple: false,
+    keywords: [
+      'rotisserie chicken',
+      'chicken',
+      'whole chicken',
+      'cooked chicken',
+      'shredded chicken',
+      'chicken meat',
+      'deli chicken',
+      'roast chicken',
+      'chicken breast',
+      'chicken breasts',
+    ],
+  },
+  {
     id: 'wm-meat-1',
     itemId: '10414680',
     name: 'Boneless Skinless Chicken Breast',
@@ -31,10 +55,11 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
     estimatedPrice: 7.42,
     packageSize: '3 lb tray',
     isPantryStaple: false,
-    keywords: ['chicken breast', 'chicken breasts', 'boneless chicken', 'raw chicken', 'chicken fillet', 'chicken'],
+    keywords: ['chicken breast', 'chicken breasts', 'boneless chicken', 'raw chicken', 'chicken fillet'],
   },
   {
     id: 'wm-meat-2',
+    itemId: '51259017',
     name: 'Boneless Skinless Chicken Thighs',
     walmartQuery: 'Great Value Boneless Skinless Chicken Thighs 3 lb',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Boneless%20Skinless%20Chicken%20Thighs%203%20lb',
@@ -47,6 +72,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-meat-3',
+    itemId: '479601462',
     name: '80/20 Ground Beef',
     walmartQuery: 'All Natural 80/20 Ground Beef Chuck 1 lb',
     walmartSearchUrl: 'https://www.walmart.com/search?q=All%20Natural%2080%2F20%20Ground%20Beef%201%20lb',
@@ -96,6 +122,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-meat-7',
+    itemId: '44391087',
     name: 'Thick Cut Bacon',
     walmartQuery: 'Great Value Naturally Hardwood Smoked Thick Cut Bacon 16 oz',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Thick%20Cut%20Bacon%2016%20oz',
@@ -122,6 +149,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   // --- DAIRY & EGGS ---
   {
     id: 'wm-dairy-1',
+    itemId: '145051970',
     name: 'Large Grade A White Eggs',
     walmartQuery: 'Great Value Large White Grade A Eggs 12 Count',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Large%20White%20Eggs%2012%20Count',
@@ -134,6 +162,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-dairy-2',
+    itemId: '10450114',
     name: 'Whole Milk',
     walmartQuery: 'Great Value Whole Vitamin D Milk 1 Gallon',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Whole%20Milk%201%20Gallon',
@@ -209,6 +238,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-dairy-8',
+    itemId: '10452384',
     name: 'Oaxaca Melting Cheese',
     walmartQuery: 'Cacique Oaxaca Mexican Style Melting Cheese 10 oz',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Cacique%20Oaxaca%20Cheese%2010%20oz',
@@ -221,6 +251,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-dairy-9',
+    itemId: '26559565',
     name: 'Whole Milk Plain Greek Yogurt',
     walmartQuery: 'Great Value Plain Whole Milk Greek Yogurt 32 oz',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Greek%20Yogurt%20Plain%2032%20oz',
@@ -272,6 +303,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-prod-2',
+    itemId: '10447842',
     name: 'Fresh White Onions',
     walmartQuery: 'Fresh White Onion Each',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Fresh%20White%20Onion%20each',
@@ -296,6 +328,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-prod-4',
+    itemId: '367014931',
     name: 'Fresh White Garlic Bulbs',
     walmartQuery: 'Fresh White Garlic 3 Pack Bulbs',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Fresh%20White%20Garlic%203%20Pack%20Bulbs',
@@ -321,6 +354,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-prod-6',
+    itemId: '160597260',
     name: 'Fresh Cilantro',
     walmartQuery: 'Fresh Cilantro Bunch',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Fresh%20Cilantro%20Bunch',
@@ -521,6 +555,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-pan-5',
+    itemId: '149411733',
     name: 'Sun-Dried Tomatoes in Oil',
     walmartQuery: 'California Sun Dry Julienne Cut Sun-Dried Tomatoes in Oil 8.5 oz',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Sun-Dried%20Tomatoes%20Julienne%20Cut%20in%20Oil',
@@ -533,6 +568,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-pan-6',
+    itemId: '51415580',
     name: 'Dried Guajillo Chili Pods',
     walmartQuery: 'El Guapo Whole Dried Guajillo Chili Pods 7.5 oz',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Dried%20Guajillo%20Chile%20Pods',
@@ -545,6 +581,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-pan-7',
+    itemId: '202344615',
     name: 'Oats & Honey Granola',
     walmartQuery: 'Great Value Oats & Honey Granola 16 oz',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Oats%20and%20Honey%20Granola%2016%20oz',
@@ -557,6 +594,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-pan-8',
+    itemId: '862748103',
     name: 'Organic Black Chia Seeds',
     walmartQuery: 'Great Value Organic Black Chia Seeds 12 oz',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Organic%20Black%20Chia%20Seeds',
@@ -569,6 +607,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   },
   {
     id: 'wm-pan-9',
+    itemId: '20647992',
     name: '100% Pure Raw Honey',
     walmartQuery: 'Great Value 100% Pure Raw Honey 16 oz Bottle',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Pure%20Raw%20Honey%2016%20oz',
@@ -781,6 +820,7 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   // --- SPICES & SEASONINGS ---
   {
     id: 'wm-spc-1',
+    itemId: '637648335',
     name: 'Italian Seasoning Blend',
     walmartQuery: 'Great Value Italian Seasoning 1.25 oz Bottle',
     walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Italian%20Seasoning',
@@ -1332,6 +1372,29 @@ function hasFoodConflict(queryCleaned: string, candidate: WalmartGroceryProduct)
 export function matchWalmartGroceryItem(rawName: string, categoryHint?: string): WalmartGroceryProduct {
   const cleaned = cleanRawIngredientText(rawName);
 
+  // User Requirement: Default chicken for all recipes must be Fresh Whole Rotisserie Chicken!
+  if (
+    cleaned === 'chicken' ||
+    cleaned === 'rotisserie chicken' ||
+    cleaned === 'whole chicken' ||
+    cleaned === 'cooked chicken' ||
+    cleaned === 'shredded chicken' ||
+    cleaned === 'chicken meat' ||
+    cleaned === 'chicken breast' ||
+    cleaned === 'chicken breasts' ||
+    (cleaned.startsWith('chicken') &&
+      !cleaned.includes('thigh') &&
+      !cleaned.includes('wing') &&
+      !cleaned.includes('broth') &&
+      !cleaned.includes('nugget') &&
+      !cleaned.includes('tender') &&
+      !cleaned.includes('soup') &&
+      !cleaned.includes('bouillon'))
+  ) {
+    const rotisserie = WALMART_GROCERY_CATALOG.find((p) => p.id === 'wm-meat-rotisserie');
+    if (rotisserie) return rotisserie;
+  }
+
   // 1. Direct exact keyword or name match
   for (const prod of WALMART_GROCERY_CATALOG) {
     if (hasFoodConflict(cleaned, prod)) continue;
@@ -1424,13 +1487,63 @@ export function calculateRetailPackageQuantity(
 
   const cleanUnit = (unit || '').toLowerCase().trim();
   const pkg = (packageSize || '').toLowerCase();
+  const cat = (category || '').toLowerCase();
 
-  // Spices & Seasonings: small amounts (tsp/tbsp/pinch) always fit in 1 standard jar
-  if (category === 'Spices & Seasonings' && (cleanUnit.includes('tsp') || cleanUnit.includes('tbsp') || cleanUnit.includes('pinch'))) {
+  // 1. Spices, Seasonings, Pantry Flavorings, Extracts:
+  // Culinary pinches, dashes, tsp, tbsp always fit in 1 standard jar/tin/bottle
+  if (
+    cat.includes('spice') ||
+    cleanUnit.includes('pinch') ||
+    cleanUnit.includes('dash') ||
+    cleanUnit.includes('sprig') ||
+    ((cleanUnit.includes('tsp') || cleanUnit.includes('teaspoon')) &&
+      (pkg.includes('bottle') || pkg.includes('jar') || pkg.includes('tin') || pkg.includes('pouch') || pkg.includes('box')))
+  ) {
     return 1;
   }
 
-  // 1. Individual produce / unit count items (e.g. "1 whole lime", "1 pepper", "1 whole onion", "1 tomato", "1 lemon")
+  // 2. Dried chiles, whole bay leaves, cinnamon sticks, whole pods, tea bags:
+  // When recipes ask for 1-15 whole dried pods/leaves (e.g. "5 dried guajillo chiles", "2 bay leaves"),
+  // retail bags/pouches/jars hold 20-50+ units. 1 bag is plenty!
+  const isDriedPodOrHerb =
+    pkg.includes('bag') || pkg.includes('pouch') || pkg.includes('jar') || pkg.includes('box');
+  const isCountUnit = [
+    'count',
+    'item',
+    'unit',
+    'whole',
+    'piece',
+    'pieces',
+    'chile',
+    'chiles',
+    'chili',
+    'leaf',
+    'leaves',
+    'stick',
+    'sticks',
+    'pod',
+    'pods',
+  ].includes(cleanUnit);
+
+  if (
+    isDriedPodOrHerb &&
+    isCountUnit &&
+    (pkg.includes('chili') ||
+      pkg.includes('chile') ||
+      pkg.includes('bay') ||
+      pkg.includes('pepper') ||
+      pkg.includes('pod') ||
+      cat.includes('spice') ||
+      cat.includes('produce'))
+  ) {
+    // If recipe requests <= 15 pods/leaves, 1 standard retail bag/jar easily covers it
+    if (amount <= 15) {
+      return 1;
+    }
+    return Math.max(1, Math.ceil(amount / 20));
+  }
+
+  // 3. Individual produce / unit count items (e.g. "1 whole lime", "1 pepper", "1 whole onion", "1 tomato", "1 lemon")
   const isIndividualUnit =
     pkg.includes('each') ||
     pkg.includes('1 whole') ||
@@ -1440,17 +1553,49 @@ export function calculateRetailPackageQuantity(
     pkg.includes('1 bulb');
 
   if (isIndividualUnit) {
-    if (['count', 'item', 'unit', 'whole', 'pieces', 'piece', 'lime', 'limes', 'lemon', 'lemons', 'onion', 'onions', 'pepper', 'peppers'].includes(cleanUnit)) {
+    if (
+      [
+        'count',
+        'item',
+        'unit',
+        'whole',
+        'pieces',
+        'piece',
+        'lime',
+        'limes',
+        'lemon',
+        'lemons',
+        'onion',
+        'onions',
+        'pepper',
+        'peppers',
+        'tomato',
+        'tomatoes',
+      ].includes(cleanUnit)
+    ) {
       return Math.max(1, Math.ceil(amount));
     }
   }
 
-  // 2. Count-based retail pack (e.g. "24 count pack", "12 count carton", "4 count bag", "3 bulbs sleeve", "10 count pack")
+  // 4. Count-based retail pack (e.g. "24 count pack", "12 count carton", "4 count bag", "3 bulbs sleeve", "10 count pack")
   const countPackMatch = pkg.match(/(\d+)\s*(?:count|ct|pack|bulbs|sticks)/i);
   if (countPackMatch) {
     const packCount = parseInt(countPackMatch[1], 10);
     if (packCount > 0) {
-      if (['count', 'item', 'unit', 'whole', 'piece', 'pieces', 'tortilla', 'tortillas', 'egg', 'eggs'].includes(cleanUnit)) {
+      if (
+        [
+          'count',
+          'item',
+          'unit',
+          'whole',
+          'piece',
+          'pieces',
+          'tortilla',
+          'tortillas',
+          'egg',
+          'eggs',
+        ].includes(cleanUnit)
+      ) {
         return Math.max(1, Math.ceil(amount / packCount));
       }
       if (cleanUnit === 'clove' || cleanUnit === 'cloves') {
@@ -1460,14 +1605,7 @@ export function calculateRetailPackageQuantity(
     }
   }
 
-  // 3. Weight-based matching (recipe in lbs/oz, package in lbs/oz)
-  let neededOz: number | null = null;
-  if (['lb', 'lbs', 'pound', 'pounds'].includes(cleanUnit)) {
-    neededOz = amount * 16;
-  } else if (['oz', 'ounce', 'ounces'].includes(cleanUnit)) {
-    neededOz = amount;
-  }
-
+  // 5. Weight extraction from package (lbs or oz)
   let pkgOz: number | null = null;
   const lbMatch = pkg.match(/(\d+(?:\.\d+)?)\s*(?:lb|lbs|pound)/i);
   if (lbMatch) {
@@ -1479,11 +1617,74 @@ export function calculateRetailPackageQuantity(
     }
   }
 
-  if (neededOz !== null && pkgOz !== null && pkgOz > 0) {
-    return Math.max(1, Math.ceil(neededOz / pkgOz));
+  // 6. Recipe in Weight (lbs or oz)
+  let neededWeightOz: number | null = null;
+  if (['lb', 'lbs', 'pound', 'pounds'].includes(cleanUnit)) {
+    neededWeightOz = amount * 16;
+  } else if (['oz', 'ounce', 'ounces'].includes(cleanUnit)) {
+    neededWeightOz = amount;
   }
 
-  // 4. Volume-based matching (recipe in cups/tbsp/tsp/fl oz, package in fl oz/carton/jug)
+  if (neededWeightOz !== null && pkgOz !== null && pkgOz > 0) {
+    return Math.max(1, Math.ceil(neededWeightOz / pkgOz));
+  }
+
+  // 7. Volumetric Leafy Greens & Fresh Produce in Cups (e.g. "3 cups baby spinach", "2 cups arugula", "1 cup cilantro"):
+  // Fresh leafy greens weigh only ~1 oz per cup (10 oz tub has ~10-12 cups of fresh greens).
+  const isLeafyGreen =
+    pkg.includes('spinach') ||
+    pkg.includes('kale') ||
+    pkg.includes('arugula') ||
+    pkg.includes('greens') ||
+    pkg.includes('salad') ||
+    pkg.includes('herb') ||
+    (cleanUnit.includes('cup') && (cat.includes('produce') && !pkg.includes('berry') && !pkg.includes('fruit')));
+
+  if (isLeafyGreen && ['cup', 'cups'].includes(cleanUnit) && pkgOz !== null && pkgOz > 0) {
+    const approxWeightOz = amount * 1.0; // 1 cup ≈ 1 oz
+    return Math.max(1, Math.ceil(approxWeightOz / pkgOz));
+  }
+
+  // 8. Volumetric Shredded/Grated Cheese in Cups (e.g. "0.5 cup parmesan", "1 cup shredded cheddar"):
+  // 1 cup grated/shredded cheese ≈ 4 oz by weight.
+  const isCheese =
+    cat.includes('dairy') &&
+    (pkg.includes('cheese') ||
+      pkg.includes('parmesan') ||
+      pkg.includes('cheddar') ||
+      pkg.includes('mozzarella'));
+  if (isCheese && ['cup', 'cups'].includes(cleanUnit) && pkgOz !== null && pkgOz > 0) {
+    const approxWeightOz = amount * 4.0; // 1 cup ≈ 4 oz
+    return Math.max(1, Math.ceil(approxWeightOz / pkgOz));
+  }
+
+  // 9. Volumetric Grains, Oats, Granola, Flour, Sugar in Cups:
+  // 1 cup ≈ 4-5 oz by weight.
+  const isDryGrain =
+    cat.includes('pantry') &&
+    (pkg.includes('granola') ||
+      pkg.includes('oats') ||
+      pkg.includes('flour') ||
+      pkg.includes('sugar') ||
+      pkg.includes('rice'));
+  if (isDryGrain && ['cup', 'cups'].includes(cleanUnit) && pkgOz !== null && pkgOz > 0) {
+    const approxWeightOz = amount * 4.5; // 1 cup ≈ 4.5 oz
+    return Math.max(1, Math.ceil(approxWeightOz / pkgOz));
+  }
+
+  // 10. Berries & Small Fruit in Cups:
+  // 1 cup berries ≈ 5.5 oz by weight. 1 pint clamshell ≈ 16 oz.
+  const isBerries =
+    pkg.includes('strawberr') ||
+    pkg.includes('blueberr') ||
+    pkg.includes('raspberr') ||
+    pkg.includes('blackberr');
+  if (isBerries && ['cup', 'cups', 'pint', 'pints'].includes(cleanUnit) && pkgOz !== null && pkgOz > 0) {
+    const approxWeightOz = cleanUnit.includes('pint') ? amount * 16 : amount * 5.5;
+    return Math.max(1, Math.ceil(approxWeightOz / pkgOz));
+  }
+
+  // 11. Liquid Volume matching (cups/tbsp/tsp/fl oz, package in fl oz/carton/jug/bottle/jar)
   let neededFlOz: number | null = null;
   if (['cup', 'cups'].includes(cleanUnit)) {
     neededFlOz = amount * 8;
@@ -1508,7 +1709,6 @@ export function calculateRetailPackageQuantity(
   } else if (pkg.includes('quart')) {
     pkgFlOz = 32;
   } else if (pkgOz !== null) {
-    // 1 oz approx 1 fl oz for liquids
     pkgFlOz = pkgOz;
   }
 
@@ -1519,12 +1719,29 @@ export function calculateRetailPackageQuantity(
     return Math.max(1, Math.ceil(neededFlOz / pkgFlOz));
   }
 
-  // 5. Cans, jars, bags, boxes unit match
-  if (['can', 'cans', 'jar', 'jars', 'bag', 'bags', 'box', 'boxes', 'pack', 'packs', 'package', 'packages', 'bunch', 'bunches'].includes(cleanUnit)) {
+  // 12. Cans, jars, bags, boxes unit match
+  if (
+    [
+      'can',
+      'cans',
+      'jar',
+      'jars',
+      'bag',
+      'bags',
+      'box',
+      'boxes',
+      'pack',
+      'packs',
+      'package',
+      'packages',
+      'bunch',
+      'bunches',
+    ].includes(cleanUnit)
+  ) {
     return Math.max(1, Math.ceil(amount));
   }
 
-  // 6. Generic items/count
+  // 13. Generic items/count
   if (['count', 'item', 'unit', 'each'].includes(cleanUnit)) {
     return Math.max(1, Math.ceil(amount));
   }
@@ -1548,4 +1765,67 @@ export function searchWalmartCatalog(query: string, limit = 10): WalmartGroceryP
     );
   }).slice(0, limit);
 }
+
+/**
+ * Finds or synthesizes a verified Great Value store-brand substitution for an ingredient
+ */
+export function findGreatValueSubstitution(ingredientName: string, originalPrice?: number): {
+  name: string;
+  explanation: string;
+  walmartQuery: string;
+  walmartSearchUrl: string;
+  walmartDirectAddUrl?: string;
+  itemId?: string;
+  estimatedPrice: number;
+  isGreatValue: boolean;
+  savingsVsOriginal: number;
+} {
+  const clean = ingredientName.toLowerCase().trim();
+  const tokens = clean.split(/\s+/).filter((t) => t.length > 2);
+
+  // Look for existing Great Value branded items in catalog
+  const gvMatches = WALMART_GROCERY_CATALOG.filter((item) => {
+    const isGV = item.brand === 'Great Value' || item.name.toLowerCase().includes('great value') || item.walmartQuery.toLowerCase().includes('great value');
+    if (!isGV) return false;
+    const nameLower = item.name.toLowerCase();
+    const queryLower = item.walmartQuery.toLowerCase();
+    return tokens.some((tok) => nameLower.includes(tok) || queryLower.includes(tok) || item.keywords.some((k) => k.includes(tok)));
+  });
+
+  if (gvMatches.length > 0) {
+    const best = gvMatches[0];
+    const orig = originalPrice && originalPrice > best.estimatedPrice ? originalPrice : parseFloat((best.estimatedPrice * 1.3).toFixed(2));
+    const savings = Math.max(0.40, parseFloat((orig - best.estimatedPrice).toFixed(2)));
+
+    return {
+      name: best.name,
+      explanation: `Walmart Great Value store brand option (${best.packageSize}) delivers the best price-to-quality ratio.`,
+      walmartQuery: best.walmartQuery,
+      walmartSearchUrl: best.walmartSearchUrl,
+      walmartDirectAddUrl: best.itemId ? `https://www.walmart.com/ip/${best.itemId}` : best.walmartSearchUrl,
+      itemId: best.itemId,
+      estimatedPrice: best.estimatedPrice,
+      isGreatValue: true,
+      savingsVsOriginal: savings,
+    };
+  }
+
+  // Synthesize a Great Value query for items not explicitly in catalog
+  const query = `Great Value ${ingredientName.replace(/^(fresh|organic|pure|raw)\s+/i, '').trim()}`;
+  const orig = originalPrice && originalPrice > 0 ? originalPrice : 3.48;
+  const estimatedPrice = Math.max(0.98, parseFloat((orig * 0.72).toFixed(2)));
+  const savings = Math.max(0.50, parseFloat((orig - estimatedPrice).toFixed(2)));
+
+  return {
+    name: `Great Value ${ingredientName.replace(/^(fresh|organic|pure|raw)\s+/i, '').trim()}`,
+    explanation: 'Walmart Great Value store-brand alternative with everyday low pricing.',
+    walmartQuery: query,
+    walmartSearchUrl: `https://www.walmart.com/search?q=${encodeURIComponent(query)}`,
+    walmartDirectAddUrl: `https://www.walmart.com/search?q=${encodeURIComponent(query)}`,
+    estimatedPrice,
+    isGreatValue: true,
+    savingsVsOriginal: savings,
+  };
+}
+
 

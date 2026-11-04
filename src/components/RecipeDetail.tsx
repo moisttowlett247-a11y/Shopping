@@ -141,6 +141,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
       if (ing.id === swapIngredient.id) {
         return {
           ...ing,
+          itemId: prod.itemId,
           name: prod.name,
           walmartQuery: prod.walmartQuery,
           walmartSearchUrl: prod.walmartSearchUrl,

@@ -57,12 +57,12 @@ export const Header: React.FC<HeaderProps> = ({
             How It Works
           </button>
           <a
-            href="https://www.walmart.com/cart"
+            href="https://www.walmart.com/cp/groceries/976759"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-slate-900 transition-colors whitespace-nowrap shrink-0"
           >
-            Walmart.com
+            Walmart Grocery
           </a>
         </nav>
 

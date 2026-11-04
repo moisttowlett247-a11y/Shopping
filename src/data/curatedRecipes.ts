@@ -4,38 +4,37 @@ import { tuscanImg, birriaImg, parfaitImg } from '../assets/images';
 export const INITIAL_RECIPES: Recipe[] = [
   {
     id: 'recipe-tuscan-chicken',
-    title: 'Creamy Tuscan Garlic Chicken Skillet',
-    description: 'Golden pan-seared chicken breasts smothered in a velvety sun-dried tomato and baby spinach garlic parmesan sauce.',
-    prepTime: '15 mins',
-    cookTime: '20 mins',
+    title: 'Creamy Tuscan Garlic Rotisserie Chicken Skillet',
+    description: 'Juicy shredded whole rotisserie chicken smothered in a velvety sun-dried tomato and baby spinach garlic parmesan sauce.',
+    prepTime: '10 mins',
+    cookTime: '15 mins',
     servings: 4,
     baseServings: 4,
     cuisine: 'Italian-American',
-    tags: ['Skillet Dinner', 'High Protein', 'Weeknight Favorite'],
+    tags: ['Rotisserie Favorite', 'Quick Dinner', 'High Protein'],
     image: tuscanImg,
     instructions: [
-      'Season chicken breasts generously with Italian herbs, salt, and black pepper on both sides.',
-      'Heat 2 tablespoons of olive oil in a large skillet over medium-high heat. Sear chicken 5-7 minutes per side until golden brown and cooked through (165°F). Remove and set aside.',
-      'In the same skillet, melt butter and sauté minced garlic for 1 minute until fragrant.',
+      'Shred the whole rotisserie chicken into bite-sized tender pieces, discarding skin and bones (or saving for broth).',
+      'Heat 2 tablespoons of olive oil and melt butter in a large skillet over medium heat, sautéing minced garlic for 1 minute until fragrant.',
       'Add drained sun-dried tomatoes, chicken broth, and heavy cream. Bring to a gentle simmer for 3 minutes.',
       'Stir in grated parmesan cheese until melted and creamy, then fold in fresh baby spinach until just wilted.',
-      'Return seared chicken to the skillet, spooning sauce over top. Garnish with fresh chopped parsley and serve with warm pasta or crusty bread.'
+      'Fold in the tender shredded rotisserie chicken until warmed through in the rich sauce. Garnish with fresh herbs and serve hot over pasta, rice, or with warm crusty bread.'
     ],
     ingredients: [
       {
         id: 'ing-tc-1',
-        itemId: '10414680',
-        name: 'Boneless Skinless Chicken Breast',
-        rawText: '1.5 lbs boneless skinless chicken breasts',
-        amount: 1.5,
-        unit: 'lbs',
+        itemId: '325918992',
+        name: 'Fresh Whole Rotisserie Chicken',
+        rawText: '1 whole rotisserie chicken, shredded',
+        amount: 1,
+        unit: 'whole chicken',
         category: 'Meat & Seafood',
-        walmartQuery: 'Great Value Boneless Skinless Chicken Breast 3 lb',
-        walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Boneless%20Skinless%20Chicken%20Breast%203%20lb',
-        walmartDirectAddUrl: 'https://www.walmart.com/search?q=Great%20Value%20Boneless%20Skinless%20Chicken%20Breast%203%20lb',
+        walmartQuery: 'Freshness Guaranteed Traditional Rotisserie Whole Chicken 2.25 lb',
+        walmartSearchUrl: 'https://www.walmart.com/search?q=Freshness%20Guaranteed%20Rotisserie%20Chicken',
+        walmartDirectAddUrl: 'https://www.walmart.com/ip/Hot-Freshness-Guaranteed-Traditional-Rotisserie-Whole-Chicken-2-25-lb/325918992',
         brandTier: 'great_value',
-        estimatedPrice: 7.42,
-        packageSize: '3 lb tray',
+        estimatedPrice: 5.97,
+        packageSize: '2.25 lb whole chicken',
         isPantryStaple: false,
         inPantry: false
       },
@@ -75,6 +74,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       },
       {
         id: 'ing-tc-4',
+        itemId: '149411733',
         name: 'Sun-Dried Tomatoes in Oil',
         rawText: '0.5 cup julienne sun-dried tomatoes, drained',
         amount: 0.5,
@@ -82,7 +82,7 @@ export const INITIAL_RECIPES: Recipe[] = [
         category: 'Pantry & Dry Goods',
         walmartQuery: 'California Sun Dry Julienne Cut Sun-Dried Tomatoes in Oil 8.5 oz',
         walmartSearchUrl: 'https://www.walmart.com/search?q=Sun-Dried%20Tomatoes%20Julienne%20Cut%20in%20Oil',
-        walmartDirectAddUrl: 'https://www.walmart.com/search?q=Sun-Dried%20Tomatoes%20Julienne%20Cut%20in%20Oil',
+        walmartDirectAddUrl: 'https://www.walmart.com/ip/California-Sun-Dry-Sun-Dried-Tomatoes-in-Oil-with-Herbs-Julienne-Cut-8-oz-Jar-Gluten-Free/149411733',
         brandTier: 'name_brand',
         estimatedPrice: 3.48,
         packageSize: '8.5 oz jar',
@@ -155,10 +155,11 @@ export const INITIAL_RECIPES: Recipe[] = [
         estimatedPrice: 4.88,
         packageSize: '17 fl oz bottle',
         isPantryStaple: true,
-        inPantry: true
+        inPantry: false
       },
       {
         id: 'ing-tc-9',
+        itemId: '637648335',
         name: 'Italian Seasoning Herb Blend',
         rawText: '1 tsp Italian seasoning',
         amount: 1,
@@ -166,12 +167,12 @@ export const INITIAL_RECIPES: Recipe[] = [
         category: 'Spices & Seasonings',
         walmartQuery: 'Great Value Italian Seasoning 1.25 oz',
         walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Italian%20Seasoning',
-        walmartDirectAddUrl: 'https://www.walmart.com/search?q=Great%20Value%20Italian%20Seasoning',
+        walmartDirectAddUrl: 'https://www.walmart.com/ip/Great-Value-Italian-Seasoning-0-95-oz/637648335',
         brandTier: 'great_value',
         estimatedPrice: 1.12,
         packageSize: '1.25 oz bottle',
         isPantryStaple: true,
-        inPantry: true
+        inPantry: false
       }
     ]
   },
@@ -214,6 +215,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       },
       {
         id: 'ing-bb-2',
+        itemId: '51415580',
         name: 'Dried Guajillo Chiles',
         rawText: '5 dried guajillo chiles, stemmed & seeded',
         amount: 5,
@@ -221,7 +223,7 @@ export const INITIAL_RECIPES: Recipe[] = [
         category: 'Produce',
         walmartQuery: 'El Guapo Whole Dried Guajillo Chili Pods 7.5 oz',
         walmartSearchUrl: 'https://www.walmart.com/search?q=Dried%20Guajillo%20Chile%20Pods',
-        walmartDirectAddUrl: 'https://www.walmart.com/search?q=Dried%20Guajillo%20Chile%20Pods',
+        walmartDirectAddUrl: 'https://www.walmart.com/ip/El-Guapo-Whole-Guajillo-Chili-Pods-Chile-Guajillo-Entero-7-5-oz-Bag/51415580',
         brandTier: 'name_brand',
         estimatedPrice: 2.98,
         packageSize: '7.5 oz bag',
@@ -230,6 +232,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       },
       {
         id: 'ing-bb-3',
+        itemId: '10452384',
         name: 'Oaxaca Melting Cheese',
         rawText: '8 oz Oaxaca or Monterey Jack cheese, shredded',
         amount: 8,
@@ -237,7 +240,7 @@ export const INITIAL_RECIPES: Recipe[] = [
         category: 'Dairy & Eggs',
         walmartQuery: 'Cacique Oaxaca Mexican Melting Cheese 10 oz',
         walmartSearchUrl: 'https://www.walmart.com/search?q=Cacique%20Oaxaca%20Cheese',
-        walmartDirectAddUrl: 'https://www.walmart.com/search?q=Cacique%20Oaxaca%20Cheese',
+        walmartDirectAddUrl: 'https://www.walmart.com/ip/Great-Value-Monterey-Jack-Cheese-16-oz-Block-Plastic-Packaging/10452384',
         brandTier: 'name_brand',
         estimatedPrice: 3.98,
         packageSize: '10 oz package',
@@ -280,6 +283,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       },
       {
         id: 'ing-bb-6',
+        itemId: '160597260',
         name: 'Fresh Cilantro',
         rawText: '1 bunch fresh cilantro, chopped',
         amount: 1,
@@ -287,7 +291,7 @@ export const INITIAL_RECIPES: Recipe[] = [
         category: 'Produce',
         walmartQuery: 'Fresh Cilantro Bunch',
         walmartSearchUrl: 'https://www.walmart.com/search?q=Fresh%20Cilantro%20Bunch',
-        walmartDirectAddUrl: 'https://www.walmart.com/search?q=Fresh%20Cilantro%20Bunch',
+        walmartDirectAddUrl: 'https://www.walmart.com/ip/Fresh-Whole-Green-Cilantro-Bunch-1-Bunch-Fresh-Produce/160597260',
         brandTier: 'great_value',
         estimatedPrice: 0.58,
         packageSize: '1 fresh bunch',
@@ -351,6 +355,7 @@ export const INITIAL_RECIPES: Recipe[] = [
     ingredients: [
       {
         id: 'ing-bp-1',
+        itemId: '26559565',
         name: 'Whole Milk Greek Yogurt',
         rawText: '2 cups plain or vanilla whole milk Greek yogurt',
         amount: 2,
@@ -358,7 +363,7 @@ export const INITIAL_RECIPES: Recipe[] = [
         category: 'Dairy & Eggs',
         walmartQuery: 'Great Value Plain Whole Milk Greek Yogurt 32 oz',
         walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Greek%20Yogurt%2032%20oz',
-        walmartDirectAddUrl: 'https://www.walmart.com/search?q=Great%20Value%20Greek%20Yogurt%2032%20oz',
+        walmartDirectAddUrl: 'https://www.walmart.com/ip/Great-Value-Greek-Plain-Nonfat-Yogurt-32-oz-Tub/26559565',
         brandTier: 'great_value',
         estimatedPrice: 3.47,
         packageSize: '32 oz tub',
@@ -401,6 +406,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       },
       {
         id: 'ing-bp-4',
+        itemId: '202344615',
         name: 'Oats & Honey Granola',
         rawText: '1 cup crunchy oats & honey granola',
         amount: 1,
@@ -408,7 +414,7 @@ export const INITIAL_RECIPES: Recipe[] = [
         category: 'Pantry & Dry Goods',
         walmartQuery: 'Great Value Oats & Honey Granola 16 oz',
         walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Oats%20and%20Honey%20Granola%2016%20oz',
-        walmartDirectAddUrl: 'https://www.walmart.com/search?q=Great%20Value%20Oats%20and%20Honey%20Granola%2016%20oz',
+        walmartDirectAddUrl: 'https://www.walmart.com/ip/Great-Value-Oats-Honey-Granola-11-oz/202344615',
         brandTier: 'great_value',
         estimatedPrice: 2.68,
         packageSize: '16 oz pouch',
@@ -417,6 +423,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       },
       {
         id: 'ing-bp-5',
+        itemId: '862748103',
         name: 'Organic Chia Seeds',
         rawText: '2 tbsp black chia seeds',
         amount: 2,
@@ -424,7 +431,7 @@ export const INITIAL_RECIPES: Recipe[] = [
         category: 'Pantry & Dry Goods',
         walmartQuery: 'Great Value Organic Black Chia Seeds 12 oz',
         walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Organic%20Black%20Chia%20Seeds',
-        walmartDirectAddUrl: 'https://www.walmart.com/search?q=Great%20Value%20Organic%20Black%20Chia%20Seeds',
+        walmartDirectAddUrl: 'https://www.walmart.com/ip/Great-Value-Organic-Chia-Seeds-32-oz/862748103',
         brandTier: 'organic',
         estimatedPrice: 3.74,
         packageSize: '12 oz pouch',
@@ -433,6 +440,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       },
       {
         id: 'ing-bp-6',
+        itemId: '20647992',
         name: 'Raw Clover Honey',
         rawText: '2 tbsp pure raw clover honey',
         amount: 2,
@@ -440,12 +448,12 @@ export const INITIAL_RECIPES: Recipe[] = [
         category: 'Pantry & Dry Goods',
         walmartQuery: 'Great Value 100% Pure Raw Honey 16 oz bottle',
         walmartSearchUrl: 'https://www.walmart.com/search?q=Great%20Value%20Pure%20Raw%20Honey',
-        walmartDirectAddUrl: 'https://www.walmart.com/search?q=Great%20Value%20Pure%20Raw%20Honey',
+        walmartDirectAddUrl: 'https://www.walmart.com/ip/Great-Value-Honey-12-oz-Plastic-Bear/20647992',
         brandTier: 'great_value',
         estimatedPrice: 3.98,
         packageSize: '16 oz squeeze bear',
         isPantryStaple: true,
-        inPantry: true
+        inPantry: false
       }
     ]
   }
