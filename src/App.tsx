@@ -22,13 +22,16 @@ import { RecipeDetail } from './components/RecipeDetail';
 import { RecipeInputModal } from './components/RecipeInputModal';
 import { WalmartCartDrawer, CartItem } from './components/WalmartCartDrawer';
 import { SubstituteModal } from './components/SubstituteModal';
+import { DefaultSelectionModal } from './components/DefaultSelectionModal';
 import { HowItWorks } from './components/HowItWorks';
 import { matchWalmartGroceryItem, calculateRetailPackageQuantity } from './data/walmartGroceryCatalog';
+import { DefaultSelectionSettings } from './types';
+import { DEFAULT_SELECTION_SETTINGS, applyDefaultSelectionToRecipe } from './utils/defaultSelection';
 
 // Storage version key to guarantee old corrupt/hallucinated SKU items or stale quantities
 // are purged from the user's browser localStorage on first load!
 const STORAGE_VERSION_KEY = 'cartcraft_storage_version';
-const CURRENT_STORAGE_VERSION = 'v12_no_auto_pantry_rotisserie_chicken_great_value';
+const CURRENT_STORAGE_VERSION = 'v13_bagged_rotisserie_and_default_selection';
 
 // Helper to ensure Walmart URLs are 100% matched against our verified Walmart Grocery Catalog
 // CRITICAL: NEVER overwrite the recipe's authentic food name!
@@ -118,6 +121,33 @@ export default function App() {
   const [recipeInputTab, setRecipeInputTab] = useState<'paste' | 'manual' | 'ai'>('paste');
   const [substituteIngredient, setSubstituteIngredient] = useState<Ingredient | null>(null);
 
+  // Global Default Ingredient Selection Settings (persisted across sessions)
+  const [defaultSelectionSettings, setDefaultSelectionSettings] = useState<DefaultSelectionSettings>(() => {
+    try {
+      const saved = localStorage.getItem('cartcraft_default_selection_settings');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error('Error loading default selection settings', e);
+    }
+    return DEFAULT_SELECTION_SETTINGS;
+  });
+  const [isDefaultSelectionOpen, setIsDefaultSelectionOpen] = useState(false);
+
+  const handleSaveDefaultSelectionSettings = (newSettings: DefaultSelectionSettings) => {
+    setDefaultSelectionSettings(newSettings);
+    try {
+      localStorage.setItem('cartcraft_default_selection_settings', JSON.stringify(newSettings));
+    } catch (e) {
+      console.error('Error saving default selection settings', e);
+    }
+    const label = newSettings.mode === 'all'
+      ? 'All Ingredients'
+      : newSettings.mode === 'exclude_staples'
+      ? `Exclude Home Staples (${newSettings.homeStaples.length} staples)`
+      : 'Perishables & Proteins Only';
+    showToast(`✓ Default ingredient rule: "${label}" applied to all recipes!`);
+  };
+
   // Toast Notification state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -166,9 +196,10 @@ export default function App() {
     selectedIngredientIds?: Set<string>,
     servingMultiplier: number = 1
   ) => {
+    const effectiveSelection = selectedIngredientIds || applyDefaultSelectionToRecipe(recipe.ingredients, defaultSelectionSettings);
     const itemsToAdd = recipe.ingredients.filter((i) => {
       if (i.inPantry) return false;
-      if (selectedIngredientIds && !selectedIngredientIds.has(i.id)) return false;
+      if (!effectiveSelection.has(i.id)) return false;
       return true;
     });
 
@@ -416,6 +447,7 @@ export default function App() {
           setRecipeInputTab('paste');
           setIsRecipeInputOpen(true);
         }}
+        onOpenDefaultSelectionSettings={() => setIsDefaultSelectionOpen(true)}
         onNavigateSection={(id) => {
           setSelectedRecipeId(null);
           const el = document.getElementById(id);
@@ -435,6 +467,8 @@ export default function App() {
             cartItemIds={cartItemIds}
             onToggleCartItem={handleToggleCartItem}
             onOpenCart={() => setIsCartOpen(true)}
+            defaultSelectionSettings={defaultSelectionSettings}
+            onOpenDefaultSelectionSettings={() => setIsDefaultSelectionOpen(true)}
           />
         ) : (
           /* Storefront & Catalog View */
@@ -625,6 +659,14 @@ export default function App() {
         ingredient={substituteIngredient}
         onClose={() => setSubstituteIngredient(null)}
         onApplySubstitution={handleApplySubstitution}
+      />
+
+      {/* Global Default Ingredient Selection Modal (Applies to all pre-made and custom recipes) */}
+      <DefaultSelectionModal
+        isOpen={isDefaultSelectionOpen}
+        settings={defaultSelectionSettings}
+        onClose={() => setIsDefaultSelectionOpen(false)}
+        onSaveSettings={handleSaveDefaultSelectionSettings}
       />
     </div>
   );

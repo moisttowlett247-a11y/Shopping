@@ -1,11 +1,12 @@
 import React from 'react';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, SlidersHorizontal } from 'lucide-react';
 
 interface HeaderProps {
   cartItemCount: number;
   onOpenCart: () => void;
   onOpenRecipeInput: () => void;
   onNavigateSection: (sectionId: string) => void;
+  onOpenDefaultSelectionSettings?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -13,6 +14,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenCart,
   onOpenRecipeInput,
   onNavigateSection,
+  onOpenDefaultSelectionSettings,
 }) => {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
@@ -26,7 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
 
         {/* Zone 2: 4-5 concise single-line text navigation links */}
-        <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-slate-600">
+        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
           <button
             onClick={() => onNavigateSection('recipes-catalog')}
             className="hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
@@ -39,6 +41,16 @@ export const Header: React.FC<HeaderProps> = ({
           >
             Import Recipe
           </button>
+          {onOpenDefaultSelectionSettings && (
+            <button
+              onClick={onOpenDefaultSelectionSettings}
+              className="hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-1.5"
+              title="Configure default ingredient selection for all recipes"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5 text-[#0071DC]" />
+              <span>Ingredient Defaults</span>
+            </button>
+          )}
           <button
             onClick={onOpenCart}
             className="hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-1.5"
@@ -56,14 +68,6 @@ export const Header: React.FC<HeaderProps> = ({
           >
             How It Works
           </button>
-          <a
-            href="https://www.walmart.com/cp/groceries/976759"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-slate-900 transition-colors whitespace-nowrap shrink-0"
-          >
-            Walmart Grocery
-          </a>
         </nav>
 
         {/* Zone 3: 1 primary action */}

@@ -50,4 +50,12 @@ export interface CartItem extends Ingredient {
   orderQuantity: number;
 }
 
+export type DefaultSelectionMode = 'all' | 'exclude_staples' | 'perishables_only';
+
+export interface DefaultSelectionSettings {
+  mode: DefaultSelectionMode;
+  homeStaples: string[];
+  autoApplyOnOpen: boolean;
+}
+
 

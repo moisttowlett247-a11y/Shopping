@@ -295,7 +295,7 @@ app.post('/api/recipe/generate', async (req: Request, res: Response) => {
     }
 
     if (!ai) {
-      const sample = fallbackParseRecipe(`Delicious ${userPrompt}\n- 1 whole rotisserie chicken\n- 2 tbsp olive oil\n- 1 tsp salt\n- 1 diced onion\n- 2 cloves garlic\n- 1 cup white rice\nInstructions:\n1. Shred rotisserie chicken and cook aromatics\n2. Combine and season to serve.`);
+      const sample = fallbackParseRecipe(`Delicious ${userPrompt}\n- 1 whole bagged rotisserie chicken\n- 2 tbsp olive oil\n- 1 tsp salt\n- 1 diced onion\n- 2 cloves garlic\n- 1 cup white rice\nInstructions:\n1. Shred Freshness Guaranteed bagged rotisserie chicken and cook aromatics\n2. Combine and season to serve.`);
       sample.title = userPrompt;
       return res.json({ recipe: sample, source: 'fallback' });
     }
@@ -307,11 +307,11 @@ Target servings: ${servings}
 Budget level: ${budget} (Prioritize Great Value budget grocery items where possible).
 
 CRITICAL GROCERY RULES:
-- For any chicken dish or generic poultry, default to "Freshness Guaranteed Traditional Rotisserie Whole Chicken 2.25 lb" or Great Value chicken.
+- For any chicken dish or generic poultry, default to "Freshness Guaranteed Bagged Rotisserie Chicken 36 oz" or Great Value chicken.
 - Never mark ingredients as in-pantry by default; all items must default to inPantry: false so they can be added to the Walmart shopping cart.
 - Only return real FOOD AND GROCERY ingredients sold at Walmart supermarkets.
 - Never include non-food items, cosmetics, makeup, or hardware.
-- Provide clean, exact Walmart search queries (e.g. "Freshness Guaranteed Traditional Rotisserie Whole Chicken 2.25 lb", "Great Value Long Grain Enriched White Rice 5 lb").
+- Provide clean, exact Walmart search queries (e.g. "Freshness Guaranteed Traditional Rotisserie Chicken in Bag 36 oz", "Great Value Long Grain Enriched White Rice 5 lb").
 - Do NOT include preparation words in walmartQuery.`;
 
     const response = await ai.models.generateContent({
@@ -427,7 +427,7 @@ app.post('/api/recipe/substitute', async (req: Request, res: Response) => {
     const prompt = `Provide 3 smart Walmart grocery substitutions for the food ingredient "${ingredientName}".
 IMPORTANT STORE-BRAND RULE:
 - Always offer a Walmart "Great Value" store brand option as the PRIMARY substitution (or Freshness Guaranteed for rotisserie chicken/bakery) to ensure maximum cost savings for the shopper.
-- If the item is chicken, offer Freshness Guaranteed Traditional Rotisserie Chicken or Great Value chicken cut.
+- If the item is chicken, offer Freshness Guaranteed Bagged Rotisserie Chicken or Great Value chicken cut.
 Reason for substitution: ${reason} (e.g. budget, store-brand swap, dairy-free, gluten-free, healthy, or out-of-stock).
 Rules:
 - MUST be grocery/food products only!

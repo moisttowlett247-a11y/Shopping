@@ -143,7 +143,7 @@ function clientSideGenerateRecipe(prompt: string, servings: number = 4, budget: 
   const candidateNames: string[] = [];
 
   if (p.includes('chicken')) {
-    candidateNames.push('Fresh Whole Rotisserie Chicken', 'Extra Virgin Olive Oil', 'Fresh Garlic Bulbs', 'Fresh Yellow Onions');
+    candidateNames.push('Freshness Guaranteed Bagged Rotisserie Chicken', 'Extra Virgin Olive Oil', 'Fresh Garlic Bulbs', 'Fresh Yellow Onions');
   } else if (p.includes('beef') || p.includes('taco') || p.includes('steak')) {
     candidateNames.push('80/20 Ground Beef', 'White Corn Street Taco Tortillas', 'Fresh Yellow Onions', 'Fresh Cilantro');
   } else if (p.includes('pasta') || p.includes('italian')) {
@@ -151,8 +151,8 @@ function clientSideGenerateRecipe(prompt: string, servings: number = 4, budget: 
   } else if (p.includes('salmon') || p.includes('fish')) {
     candidateNames.push('Atlantic Salmon Fillets', 'Fresh Whole Lemons', 'Unsalted Sweet Cream Butter', 'Fresh Garlic Bulbs');
   } else {
-    // General delicious dish with default rotisserie chicken
-    candidateNames.push('Fresh Whole Rotisserie Chicken', 'Long Grain White Rice', 'Fresh Baby Spinach', 'Extra Virgin Olive Oil', 'Fresh Garlic Bulbs');
+    // General delicious dish with default bagged rotisserie chicken
+    candidateNames.push('Freshness Guaranteed Bagged Rotisserie Chicken', 'Long Grain White Rice', 'Fresh Baby Spinach', 'Extra Virgin Olive Oil', 'Fresh Garlic Bulbs');
   }
 
   // Add seasonings and staples

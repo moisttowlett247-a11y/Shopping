@@ -16,11 +16,13 @@ import {
   Square,
   RotateCcw,
   Store,
+  SlidersHorizontal,
 } from 'lucide-react';
-import { Recipe, Ingredient } from '../types';
+import { Recipe, Ingredient, DefaultSelectionSettings } from '../types';
 import { IngredientRow } from './IngredientRow';
 import { SwapWalmartProductModal } from './SwapWalmartProductModal';
 import { matchWalmartGroceryItem, calculateRetailPackageQuantity, WalmartGroceryProduct } from '../data/walmartGroceryCatalog';
+import { applyDefaultSelectionToRecipe } from '../utils/defaultSelection';
 
 interface RecipeDetailProps {
   recipe: Recipe;
@@ -31,6 +33,8 @@ interface RecipeDetailProps {
   cartItemIds: Set<string>;
   onToggleCartItem: (ingredient: Ingredient, servingMultiplier?: number) => void;
   onOpenCart: () => void;
+  defaultSelectionSettings?: DefaultSelectionSettings;
+  onOpenDefaultSelectionSettings?: () => void;
 }
 
 export const RecipeDetail: React.FC<RecipeDetailProps> = ({
@@ -42,6 +46,8 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
   cartItemIds,
   onToggleCartItem,
   onOpenCart,
+  defaultSelectionSettings,
+  onOpenDefaultSelectionSettings,
 }) => {
   const [servings, setServings] = useState(recipe.servings || 4);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -51,21 +57,28 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
 
   // Selection set of ingredient IDs to include when adding to cart
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<Set<string>>(() => {
+    if (defaultSelectionSettings) {
+      return applyDefaultSelectionToRecipe(recipe.ingredients, defaultSelectionSettings);
+    }
     return new Set(recipe.ingredients.filter((i) => !i.inPantry).map((i) => i.id));
   });
 
-  // Keep selection synchronized if recipe ingredients change
+  // Keep selection synchronized when recipe or default settings change
   useEffect(() => {
-    setSelectedIngredientIds((prev) => {
-      const next = new Set<string>();
-      recipe.ingredients.forEach((ing) => {
-        if (!ing.inPantry && (prev.has(ing.id) || !prev.size)) {
-          next.add(ing.id);
-        }
+    if (defaultSelectionSettings && defaultSelectionSettings.autoApplyOnOpen) {
+      setSelectedIngredientIds(applyDefaultSelectionToRecipe(recipe.ingredients, defaultSelectionSettings));
+    } else {
+      setSelectedIngredientIds((prev) => {
+        const next = new Set<string>();
+        recipe.ingredients.forEach((ing) => {
+          if (!ing.inPantry && (prev.has(ing.id) || !prev.size)) {
+            next.add(ing.id);
+          }
+        });
+        return next;
       });
-      return next;
-    });
-  }, [recipe.ingredients]);
+    }
+  }, [recipe.ingredients, defaultSelectionSettings]);
 
   // Toggle selection for single ingredient
   const handleToggleSelect = (id: string) => {
@@ -406,22 +419,43 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Quick Bulk Selection Tools */}
-            <div className="flex items-center gap-1.5 mr-2 text-xs">
+            {/* Quick Bulk Selection Tools & Default Selection Engine */}
+            <div className="flex items-center gap-1.5 mr-2 text-xs flex-wrap">
               <button
                 onClick={handleSelectAll}
-                className="px-2.5 py-1 text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer font-medium"
+                className="px-2.5 py-1 text-slate-700 hover:text-slate-900 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer font-medium"
                 title="Select all non-pantry ingredients"
               >
                 Select All
               </button>
               <button
                 onClick={handleDeselectAll}
-                className="px-2.5 py-1 text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer font-medium"
+                className="px-2.5 py-1 text-slate-700 hover:text-slate-900 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer font-medium"
                 title="Deselect all ingredients"
               >
                 Deselect All
               </button>
+
+              {defaultSelectionSettings && (
+                <button
+                  onClick={() => setSelectedIngredientIds(applyDefaultSelectionToRecipe(recipe.ingredients, defaultSelectionSettings))}
+                  className="px-2.5 py-1 text-blue-700 hover:text-blue-900 bg-blue-50/70 border border-blue-200 rounded-lg hover:bg-blue-100/70 cursor-pointer font-medium"
+                  title="Reset to your global default ingredient selection rule"
+                >
+                  Apply Default Rule ({defaultSelectionSettings.mode === 'all' ? 'All' : defaultSelectionSettings.mode === 'exclude_staples' ? 'No Staples' : 'Fresh Only'})
+                </button>
+              )}
+
+              {onOpenDefaultSelectionSettings && (
+                <button
+                  onClick={onOpenDefaultSelectionSettings}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-slate-700 hover:text-blue-700 bg-slate-100 hover:bg-blue-50 border border-slate-200 rounded-lg cursor-pointer font-medium transition-colors"
+                  title="Configure default ingredient selection for all recipes"
+                >
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Configure Defaults</span>
+                </button>
+              )}
             </div>
 
             {/* Category Filter */}
