@@ -72,8 +72,6 @@ export const QuickItemSelectorModal: React.FC<QuickItemSelectorModalProps> = ({
   const [customItemPkgSize, setCustomItemPkgSize] = useState('1 count');
   const [linkInputSuccessMessage, setLinkInputSuccessMessage] = useState<string | null>(null);
 
-  if (!isOpen) return null;
-
   // Extract Item ID in real time for Tab 3
   const detectedItemId = extractWalmartItemId(pastedLinkOrId);
 
@@ -201,6 +199,8 @@ export const QuickItemSelectorModal: React.FC<QuickItemSelectorModalProps> = ({
 
   const totalCartCount = cartItems.reduce((acc, i) => acc + i.orderQuantity, 0);
   const totalCartCost = cartItems.reduce((acc, i) => acc + i.estimatedPrice * i.orderQuantity, 0);
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs overflow-y-auto">
