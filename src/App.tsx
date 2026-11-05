@@ -23,6 +23,7 @@ import { RecipeInputModal } from './components/RecipeInputModal';
 import { WalmartCartDrawer, CartItem } from './components/WalmartCartDrawer';
 import { SubstituteModal } from './components/SubstituteModal';
 import { DefaultSelectionModal } from './components/DefaultSelectionModal';
+import { QuickItemSelectorModal } from './components/QuickItemSelectorModal';
 import { HowItWorks } from './components/HowItWorks';
 import { matchWalmartGroceryItem, calculateRetailPackageQuantity } from './data/walmartGroceryCatalog';
 import { DefaultSelectionSettings } from './types';
@@ -51,7 +52,7 @@ function sanitizeIngredientUrls<T extends Ingredient>(ing: T): T {
       ? ing.walmartQuery
       : match.walmartQuery,
     walmartSearchUrl: match.walmartSearchUrl,
-    walmartDirectAddUrl: match.walmartSearchUrl,
+    walmartDirectAddUrl: validItemId ? `https://www.walmart.com/ip/${validItemId}` : match.walmartSearchUrl,
     estimatedPrice: ing.estimatedPrice && ing.estimatedPrice > 0 ? ing.estimatedPrice : (match.estimatedPrice || 2.48),
     packageSize: ing.packageSize && ing.packageSize.trim() !== '' ? ing.packageSize : (match.packageSize || '1 package'),
   };
@@ -120,6 +121,7 @@ export default function App() {
   const [isRecipeInputOpen, setIsRecipeInputOpen] = useState(false);
   const [recipeInputTab, setRecipeInputTab] = useState<'paste' | 'manual' | 'ai'>('paste');
   const [substituteIngredient, setSubstituteIngredient] = useState<Ingredient | null>(null);
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
 
   // Global Default Ingredient Selection Settings (persisted across sessions)
   const [defaultSelectionSettings, setDefaultSelectionSettings] = useState<DefaultSelectionSettings>(() => {
@@ -313,29 +315,59 @@ export default function App() {
     walmartQuery?: string;
     walmartSearchUrl?: string;
     packageSize?: string;
+    itemId?: string;
+    recipeTitle?: string;
   }) => {
     const match = matchWalmartGroceryItem(newItem.name, newItem.category);
-    const cartItem: CartItem = {
-      id: `custom-cart-${Date.now()}`,
-      itemId: match.itemId,
-      name: match.name,
-      rawText: `${newItem.quantity} ${match.name}`,
-      amount: newItem.quantity,
-      unit: 'item',
-      category: match.category,
-      walmartQuery: newItem.walmartQuery || match.walmartQuery,
-      walmartSearchUrl: newItem.walmartSearchUrl || match.walmartSearchUrl,
-      brandTier: 'great_value',
-      estimatedPrice: newItem.estimatedPrice || match.estimatedPrice,
-      packageSize: newItem.packageSize || match.packageSize,
-      isPantryStaple: match.isPantryStaple,
-      inPantry: false,
-      recipeTitle: 'Extra Grocery Items',
-      orderQuantity: newItem.quantity,
-    };
+    const validItemId = (newItem.itemId && /^\d+$/.test(newItem.itemId))
+      ? newItem.itemId
+      : (match.itemId && /^\d+$/.test(match.itemId) ? match.itemId : undefined);
+    const directUrl = validItemId
+      ? `https://www.walmart.com/ip/${validItemId}`
+      : (newItem.walmartSearchUrl || match.walmartSearchUrl);
 
-    setCartItems((prev) => [...prev, cartItem]);
-    showToast(`✓ Added verified "${match.name}" to your cart.`);
+    const displayName = newItem.name || match.name;
+    const addQty = Math.max(1, newItem.quantity || 1);
+
+    setCartItems((prev) => {
+      // Check if item already exists by itemId or name
+      const existingIdx = prev.findIndex(
+        (i) => (validItemId && i.itemId === validItemId) || i.name.toLowerCase() === displayName.toLowerCase()
+      );
+
+      if (existingIdx >= 0) {
+        const next = [...prev];
+        next[existingIdx] = {
+          ...next[existingIdx],
+          orderQuantity: next[existingIdx].orderQuantity + addQty,
+        };
+        return next;
+      }
+
+      const cartItem: CartItem = {
+        id: `custom-cart-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        itemId: validItemId,
+        name: displayName,
+        rawText: `${addQty} ${displayName}`,
+        amount: addQty,
+        unit: 'item',
+        category: newItem.category || match.category,
+        walmartQuery: newItem.walmartQuery || match.walmartQuery,
+        walmartSearchUrl: directUrl,
+        walmartDirectAddUrl: directUrl,
+        brandTier: 'great_value',
+        estimatedPrice: newItem.estimatedPrice || match.estimatedPrice,
+        packageSize: newItem.packageSize || match.packageSize,
+        isPantryStaple: match.isPantryStaple,
+        inPantry: false,
+        recipeTitle: newItem.recipeTitle || 'Individual Items & Toiletries',
+        orderQuantity: addQty,
+      };
+
+      return [...prev, cartItem];
+    });
+
+    showToast(`✓ Added ${addQty}x "${displayName}" to your Walmart cart!`);
   };
 
   // Handler: Clear all items from cart
@@ -447,6 +479,7 @@ export default function App() {
           setRecipeInputTab('paste');
           setIsRecipeInputOpen(true);
         }}
+        onOpenQuickAddItems={() => setIsQuickAddOpen(true)}
         onOpenDefaultSelectionSettings={() => setIsDefaultSelectionOpen(true)}
         onNavigateSection={(id) => {
           setSelectedRecipeId(null);
@@ -517,6 +550,15 @@ export default function App() {
                   </div>
 
                   <button
+                    onClick={() => setIsQuickAddOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-[#0071DC] bg-blue-50 hover:bg-blue-100 border border-blue-200/90 rounded-xl shadow-2xs cursor-pointer whitespace-nowrap transition-colors"
+                    title="Add individual ingredients, coffee, pet food, and toiletries directly to cart"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <span>+ Add Items / Toiletries</span>
+                  </button>
+
+                  <button
                     onClick={() => {
                       setRecipeInputTab('paste');
                       setIsRecipeInputOpen(true);
@@ -575,9 +617,11 @@ export default function App() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredRecipes.map((recipe) => {
+                    const effectiveSelection = applyDefaultSelectionToRecipe(recipe.ingredients, defaultSelectionSettings);
+                    const targetItems = recipe.ingredients.filter((i) => !i.inPantry && effectiveSelection.has(i.id));
                     const isAllAdded =
-                      recipe.ingredients.length > 0 &&
-                      recipe.ingredients.every((i) => i.inPantry || cartItemIds.has(i.id));
+                      targetItems.length > 0 &&
+                      targetItems.every((i) => cartItemIds.has(i.id));
 
                     return (
                       <RecipeCard
@@ -586,6 +630,7 @@ export default function App() {
                         onSelect={(r) => setSelectedRecipeId(r.id)}
                         onAddAllToCart={handleAddAllToCart}
                         isAddedToCart={isAllAdded}
+                        defaultSelectionSettings={defaultSelectionSettings}
                       />
                     );
                   })}
@@ -651,6 +696,17 @@ export default function App() {
         onRemoveRecipeItems={handleRemoveRecipeFromCart}
         onAddCustomItem={handleAddCustomCartItem}
         onClearCart={handleClearCart}
+        onOpenQuickAddItems={() => setIsQuickAddOpen(true)}
+      />
+
+      {/* Quick Add Custom Item, Ingredients & Toiletries Modal */}
+      <QuickItemSelectorModal
+        isOpen={isQuickAddOpen}
+        onClose={() => setIsQuickAddOpen(false)}
+        cartItems={cartItems}
+        onAddCustomItem={handleAddCustomCartItem}
+        onUpdateCartQuantity={handleUpdateCartQuantity}
+        onOpenCart={() => setIsCartOpen(true)}
       />
 
       {/* Ingredient Substitution Modal */}

@@ -17,6 +17,8 @@ import {
   RotateCcw,
   Store,
   SlidersHorizontal,
+  Pencil,
+  Check,
 } from 'lucide-react';
 import { Recipe, Ingredient, DefaultSelectionSettings } from '../types';
 import { IngredientRow } from './IngredientRow';
@@ -54,6 +56,28 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
   const [showAddIngredient, setShowAddIngredient] = useState(false);
   const [showInstructions, setShowInstructions] = useState(true);
   const [swapIngredient, setSwapIngredient] = useState<Ingredient | null>(null);
+
+  // Recipe Title inline editing state
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [titleInput, setTitleInput] = useState(recipe.title);
+
+  useEffect(() => {
+    setTitleInput(recipe.title);
+  }, [recipe.title]);
+
+  const handleSaveTitle = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const trimmed = titleInput.trim();
+    if (trimmed && trimmed !== recipe.title) {
+      onUpdateRecipe({ ...recipe, title: trimmed });
+    }
+    setIsEditingTitle(false);
+  };
+
+  const handleCancelTitle = () => {
+    setTitleInput(recipe.title);
+    setIsEditingTitle(false);
+  };
 
   // Selection set of ingredient IDs to include when adding to cart
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<Set<string>>(() => {
@@ -298,9 +322,52 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
               </span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-              {recipe.title}
-            </h1>
+            {isEditingTitle ? (
+              <form onSubmit={handleSaveTitle} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <input
+                  type="text"
+                  value={titleInput}
+                  onChange={(e) => setTitleInput(e.target.value)}
+                  autoFocus
+                  placeholder="Enter recipe title..."
+                  className="text-xl sm:text-2xl font-extrabold text-slate-900 px-3 py-1.5 border border-blue-500 rounded-xl focus:outline-blue-600 bg-white flex-1"
+                />
+                <div className="flex items-center gap-2">
+                  <button
+                    type="submit"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0071DC] hover:bg-[#005bb5] text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>Save</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelTitle}
+                    className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="flex items-center gap-2.5 flex-wrap group">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                  {recipe.title}
+                </h1>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTitleInput(recipe.title);
+                    setIsEditingTitle(true);
+                  }}
+                  className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all cursor-pointer opacity-70 group-hover:opacity-100"
+                  title="Rename or edit recipe title"
+                  aria-label="Rename or edit recipe title"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+              </div>
+            )}
 
             <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
               {recipe.description}

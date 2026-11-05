@@ -19,6 +19,7 @@ import { Ingredient } from '../types';
 import {
   searchWalmartCatalog,
   matchWalmartGroceryItem,
+  extractWalmartItemId,
   WalmartGroceryProduct,
 } from '../data/walmartGroceryCatalog';
 
@@ -43,8 +44,10 @@ interface WalmartCartDrawerProps {
     walmartQuery?: string;
     walmartSearchUrl?: string;
     packageSize?: string;
+    itemId?: string;
   }) => void;
   onClearCart: () => void;
+  onOpenQuickAddItems?: () => void;
 }
 
 export const WalmartCartDrawer: React.FC<WalmartCartDrawerProps> = ({
@@ -56,6 +59,7 @@ export const WalmartCartDrawer: React.FC<WalmartCartDrawerProps> = ({
   onRemoveRecipeItems,
   onAddCustomItem,
   onClearCart,
+  onOpenQuickAddItems,
 }) => {
   const [viewGrouping, setViewGrouping] = useState<'recipe' | 'category'>('recipe');
   const [copied, setCopied] = useState(false);
@@ -129,7 +133,12 @@ export const WalmartCartDrawer: React.FC<WalmartCartDrawerProps> = ({
     e.preventDefault();
     if (!customName.trim()) return;
 
+    const extractedId = extractWalmartItemId(customName.trim());
     const matched = matchWalmartGroceryItem(customName.trim(), customCategory);
+    const itemId = extractedId || matched.itemId;
+    const directUrl = itemId
+      ? `https://www.walmart.com/ip/${itemId}`
+      : matched.walmartSearchUrl;
 
     if (onAddCustomItem) {
       onAddCustomItem({
@@ -138,8 +147,9 @@ export const WalmartCartDrawer: React.FC<WalmartCartDrawerProps> = ({
         quantity: parseInt(customQty, 10) || 1,
         estimatedPrice: matched.estimatedPrice || (parseFloat(customPrice) || 2.48),
         walmartQuery: customQuery || matched.walmartQuery,
-        walmartSearchUrl: matched.walmartSearchUrl,
+        walmartSearchUrl: directUrl,
         packageSize: customPkgSize || matched.packageSize,
+        itemId,
       });
     }
 
@@ -288,15 +298,32 @@ export const WalmartCartDrawer: React.FC<WalmartCartDrawerProps> = ({
               </button>
             </div>
 
-            {/* Quick Add Custom Item button */}
-            <button
-              type="button"
-              onClick={() => setShowAddCustom(!showAddCustom)}
-              className="inline-flex items-center gap-1 font-semibold text-blue-700 hover:text-blue-900 cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>+ Add Extra Grocery Item</span>
-            </button>
+            <div className="flex items-center gap-2 flex-wrap">
+              {onOpenQuickAddItems && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenQuickAddItems();
+                  }}
+                  className="inline-flex items-center gap-1 font-semibold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg border border-blue-200 transition-colors cursor-pointer"
+                  title="Browse verified ingredients, essentials, and toiletries"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <span>+ Quick Add Essentials & Toiletries</span>
+                </button>
+              )}
+
+              {/* Quick Add Custom Item button */}
+              <button
+                type="button"
+                onClick={() => setShowAddCustom(!showAddCustom)}
+                className="inline-flex items-center gap-1 font-semibold text-slate-700 hover:text-slate-900 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Custom Item</span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -359,6 +386,8 @@ export const WalmartCartDrawer: React.FC<WalmartCartDrawerProps> = ({
                 onChange={(e) => setCustomCategory(e.target.value)}
                 className="col-span-3 px-2 py-1 bg-white border border-slate-300 rounded text-slate-900 focus:outline-blue-600 text-xs"
               >
+                <option value="Personal Care & Toiletries">Toiletries</option>
+                <option value="Pet Care">Pet Care</option>
                 <option value="Dairy & Eggs">Dairy & Eggs</option>
                 <option value="Produce">Produce</option>
                 <option value="Meat & Seafood">Meat & Seafood</option>

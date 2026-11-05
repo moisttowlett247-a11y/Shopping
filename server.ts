@@ -49,15 +49,30 @@ function cleanIngredientNameForWalmart(rawText: string): { cleanName: string; am
 }
 
 // Fallback intelligent ingredient parser when Gemini is unavailable or rate-limited
-function fallbackParseRecipe(rawText: string) {
+function fallbackParseRecipe(rawText: string, customTitle?: string) {
   const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
-  const title = lines[0] || 'My Custom Recipe';
+  let title = customTitle && customTitle.trim() ? customTitle.trim() : '';
+  let startIndex = 1;
+
+  if (!title) {
+    if (lines[0] && !lines[0].startsWith('-') && !lines[0].startsWith('*') && !lines[0].startsWith('•') && !/^\d+/.test(lines[0])) {
+      title = lines[0].replace(/^#+\s*/, '');
+      startIndex = 1;
+    } else {
+      title = 'Custom Imported Recipe';
+      startIndex = 0;
+    }
+  } else if (lines[0] && !lines[0].startsWith('-') && !lines[0].startsWith('*') && !lines[0].startsWith('•') && !/^\d+/.test(lines[0])) {
+    startIndex = 1;
+  } else {
+    startIndex = 0;
+  }
   
   const ingredientLines: string[] = [];
   const instructionLines: string[] = [];
   let isIngredients = true;
 
-  for (let i = 1; i < lines.length; i++) {
+  for (let i = startIndex; i < lines.length; i++) {
     const line = lines[i];
     const lower = line.toLowerCase();
     if (lower.includes('instruction') || lower.includes('direction') || lower.includes('method') || lower.includes('steps:')) {
@@ -153,7 +168,7 @@ function fallbackParseRecipe(rawText: string) {
 // Endpoint: Parse recipe text or extract ingredients
 app.post('/api/recipe/parse', async (req: Request, res: Response) => {
   try {
-    const { recipeText, brandPreference = 'great_value' } = req.body;
+    const { recipeText, brandPreference = 'great_value', title: customTitle } = req.body;
 
     if (!recipeText || typeof recipeText !== 'string' || !recipeText.trim()) {
       return res.status(400).json({ error: 'Recipe text is required' });
@@ -161,7 +176,7 @@ app.post('/api/recipe/parse', async (req: Request, res: Response) => {
 
     if (!ai) {
       console.warn('GEMINI_API_KEY not configured, using smart fallback parser');
-      const fallback = fallbackParseRecipe(recipeText);
+      const fallback = fallbackParseRecipe(recipeText, customTitle);
       return res.json({ recipe: fallback, source: 'fallback' });
     }
 
@@ -274,13 +289,14 @@ ${recipeText}`;
     return res.json({
       recipe: {
         ...parsedData,
+        title: (customTitle && typeof customTitle === 'string' && customTitle.trim()) ? customTitle.trim() : (parsedData.title || 'Custom Imported Recipe'),
         ingredients: enhancedIngredients,
       },
       source: 'gemini',
     });
   } catch (err: any) {
     console.error('Error in /api/recipe/parse:', err);
-    const fallback = fallbackParseRecipe(req.body.recipeText || '');
+    const fallback = fallbackParseRecipe(req.body.recipeText || '', req.body.title);
     return res.json({ recipe: fallback, source: 'fallback', warning: err.message });
   }
 });
@@ -288,15 +304,15 @@ ${recipeText}`;
 // Endpoint: Generate a new recipe from a concept or prompt
 app.post('/api/recipe/generate', async (req: Request, res: Response) => {
   try {
-    const { prompt: userPrompt, servings = 4, budget = 'budget_friendly', cuisine = 'Any' } = req.body;
+    const { prompt: userPrompt, servings = 4, budget = 'budget_friendly', cuisine = 'Any', title: customTitle } = req.body;
 
     if (!userPrompt || typeof userPrompt !== 'string') {
       return res.status(400).json({ error: 'Prompt is required' });
     }
 
     if (!ai) {
-      const sample = fallbackParseRecipe(`Delicious ${userPrompt}\n- 1 whole bagged rotisserie chicken\n- 2 tbsp olive oil\n- 1 tsp salt\n- 1 diced onion\n- 2 cloves garlic\n- 1 cup white rice\nInstructions:\n1. Shred Freshness Guaranteed bagged rotisserie chicken and cook aromatics\n2. Combine and season to serve.`);
-      sample.title = userPrompt;
+      const sample = fallbackParseRecipe(`Delicious ${userPrompt}\n- 1 whole bagged rotisserie chicken\n- 2 tbsp olive oil\n- 1 tsp salt\n- 1 diced onion\n- 2 cloves garlic\n- 1 cup white rice\nInstructions:\n1. Shred Freshness Guaranteed bagged rotisserie chicken and cook aromatics\n2. Combine and season to serve.`, customTitle);
+      sample.title = (customTitle && typeof customTitle === 'string' && customTitle.trim()) ? customTitle.trim() : userPrompt;
       return res.json({ recipe: sample, source: 'fallback' });
     }
 
@@ -391,6 +407,7 @@ CRITICAL GROCERY RULES:
     return res.json({
       recipe: {
         ...parsedData,
+        title: (customTitle && typeof customTitle === 'string' && customTitle.trim()) ? customTitle.trim() : (parsedData.title || userPrompt),
         ingredients: enhancedIngredients,
       },
       source: 'gemini',

@@ -1,10 +1,11 @@
 import React from 'react';
-import { ShoppingBag, SlidersHorizontal } from 'lucide-react';
+import { ShoppingBag, SlidersHorizontal, Plus } from 'lucide-react';
 
 interface HeaderProps {
   cartItemCount: number;
   onOpenCart: () => void;
   onOpenRecipeInput: () => void;
+  onOpenQuickAddItems?: () => void;
   onNavigateSection: (sectionId: string) => void;
   onOpenDefaultSelectionSettings?: () => void;
 }
@@ -13,6 +14,7 @@ export const Header: React.FC<HeaderProps> = ({
   cartItemCount,
   onOpenCart,
   onOpenRecipeInput,
+  onOpenQuickAddItems,
   onNavigateSection,
   onOpenDefaultSelectionSettings,
 }) => {
@@ -41,6 +43,16 @@ export const Header: React.FC<HeaderProps> = ({
           >
             Import Recipe
           </button>
+          {onOpenQuickAddItems && (
+            <button
+              onClick={onOpenQuickAddItems}
+              className="text-[#0071DC] hover:text-[#005bb5] font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-1 bg-blue-50/80 hover:bg-blue-100/80 px-2.5 py-1 rounded-lg border border-blue-200/60"
+              title="Add individual ingredients, coffee, pet food, and toiletries directly to cart"
+            >
+              <Plus className="w-3.5 h-3.5 text-[#0071DC]" />
+              <span>+ Quick Add Items & Toiletries</span>
+            </button>
+          )}
           {onOpenDefaultSelectionSettings && (
             <button
               onClick={onOpenDefaultSelectionSettings}
@@ -70,8 +82,18 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         </nav>
 
-        {/* Zone 3: 1 primary action */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Zone 3: Actions */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          {onOpenQuickAddItems && (
+            <button
+              onClick={onOpenQuickAddItems}
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#0071DC] bg-blue-50 hover:bg-blue-100 border border-blue-200/80 rounded-lg transition-all cursor-pointer whitespace-nowrap"
+              title="Add individual ingredients, toiletries, and custom items"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>+ Add Items / Toiletries</span>
+            </button>
+          )}
           <button
             onClick={onOpenCart}
             className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-[#0071DC] hover:bg-[#005bb5] active:scale-98 transition-all rounded-lg shadow-sm whitespace-nowrap shrink-0 cursor-pointer"

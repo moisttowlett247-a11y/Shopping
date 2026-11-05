@@ -10,7 +10,19 @@ export interface WalmartGroceryProduct {
   name: string;
   walmartQuery: string;
   walmartSearchUrl: string;
-  category: 'Produce' | 'Meat & Seafood' | 'Dairy & Eggs' | 'Pantry & Dry Goods' | 'Bakery' | 'Spices & Seasonings' | 'Frozen' | 'Other';
+  category:
+    | 'Produce'
+    | 'Meat & Seafood'
+    | 'Dairy & Eggs'
+    | 'Pantry & Dry Goods'
+    | 'Bakery'
+    | 'Spices & Seasonings'
+    | 'Frozen'
+    | 'Personal Care & Toiletries'
+    | 'Pet Care'
+    | 'Beverages'
+    | 'Other'
+    | string;
   brand: string;
   estimatedPrice: number;
   packageSize: string;
@@ -18,7 +30,446 @@ export interface WalmartGroceryProduct {
   keywords: string[];
 }
 
+/**
+ * Extracts Walmart Item ID from a URL or raw text string
+ * Supports:
+ * - https://www.walmart.com/ip/Product-Name/12345678?classType=...
+ * - https://www.walmart.com/ip/12345678
+ * - /ip/12345678
+ * - Bare digits: 12345678
+ */
+export function extractWalmartItemId(input: string): string | null {
+  if (!input) return null;
+  const trimmed = input.trim();
+  // Check for bare digits
+  if (/^\d{6,14}$/.test(trimmed)) {
+    return trimmed;
+  }
+  // Check for /ip/(.*)/(\d+) or /ip/(\d+)
+  const match = trimmed.match(/\/ip\/(?:[^\/]+\/)?(\d+)(?:[/?#]|$)/i);
+  if (match && match[1]) {
+    return match[1];
+  }
+  // Check query parameter itemId=(\d+)
+  const queryMatch = trimmed.match(/[?&]itemId=(\d+)/i);
+  if (queryMatch && queryMatch[1]) {
+    return queryMatch[1];
+  }
+  return null;
+}
+
+/**
+ * Derives a clean product name, direct link, and item ID from a Walmart product link or Item ID
+ */
+export function parseWalmartProductLink(urlOrId: string): {
+  itemId: string | null;
+  directUrl: string;
+  inferredTitle: string;
+} {
+  const itemId = extractWalmartItemId(urlOrId);
+  let inferredTitle = '';
+  if (urlOrId.includes('/ip/')) {
+    const slugMatch = urlOrId.match(/\/ip\/([^\/?#]+)/i);
+    if (slugMatch && slugMatch[1] && !/^\d+$/.test(slugMatch[1])) {
+      inferredTitle = slugMatch[1].replace(/-/g, ' ');
+    }
+  }
+  const directUrl = itemId
+    ? `https://www.walmart.com/ip/${itemId}`
+    : (urlOrId.startsWith('http') ? urlOrId : `https://www.walmart.com/search?q=${encodeURIComponent(urlOrId)}`);
+
+  return {
+    itemId,
+    directUrl,
+    inferredTitle,
+  };
+}
+
+/**
+ * User Verified Essentials & Toiletries with exact Walmart item IDs & links
+ */
+export const USER_FAVORITE_ESSENTIALS: WalmartGroceryProduct[] = [
+  {
+    id: 'wm-fav-instant-coffee',
+    itemId: '16004720',
+    name: 'Great Value Classic Medium Roast Instant Coffee',
+    walmartQuery: 'Great Value Classic Medium Roast Instant Coffee 12 oz',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Great-Value-Classic-Medium-Roast-Instant-Coffee-12-oz/16004720?classType=VARIANT&athbdg=L1102',
+    category: 'Pantry & Dry Goods',
+    brand: 'Great Value',
+    estimatedPrice: 5.84,
+    packageSize: '12 oz jar',
+    isPantryStaple: true,
+    keywords: ['instant coffee', 'coffee', 'great value instant coffee', 'medium roast coffee', 'roast instant coffee', 'coffee crystals'],
+  },
+  {
+    id: 'wm-fav-sugar',
+    itemId: '10314931',
+    name: 'Great Value Pure Granulated Sugar',
+    walmartQuery: 'Great Value Pure Granulated Sugar 10lb',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Great-Value-Pure-Granulated-Sugar-10lb/10314931?classType=REGULAR&athbdg=L1102&from=/search',
+    category: 'Pantry & Dry Goods',
+    brand: 'Great Value',
+    estimatedPrice: 6.28,
+    packageSize: '10 lb bag',
+    isPantryStaple: true,
+    keywords: ['sugar', 'granulated sugar', 'pure sugar', 'white sugar', 'baking sugar', 'great value sugar', '10lb sugar'],
+  },
+  {
+    id: 'wm-fav-rotisserie-chicken',
+    itemId: '682789099',
+    name: 'Freshness Guaranteed Traditional Rotisserie Chicken (Chilled)',
+    walmartQuery: 'Freshness Guaranteed Traditional Rotisserie Chicken 36 oz Chilled',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Freshness-Guaranteed-Traditional-Rotisserie-Chicken-36-oz-Chilled/682789099?classType=REGULAR&athbdg=L1102',
+    category: 'Meat & Seafood',
+    brand: 'Freshness Guaranteed',
+    estimatedPrice: 6.97,
+    packageSize: '36 oz chilled',
+    isPantryStaple: false,
+    keywords: ['rotissery chicken', 'rotisserie chicken', 'freshness guaranteed rotisserie chicken', 'whole rotisserie chicken', 'traditional rotisserie chicken'],
+  },
+  {
+    id: 'wm-fav-pepperjack-cheese',
+    itemId: '546660408',
+    name: 'Sargento Sliced Pepper Jack Natural Cheese',
+    walmartQuery: 'Sargento Sliced Pepper Jack Natural Cheese 24 Slices',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Sargento-Sliced-Pepper-Jack-Natural-Cheese-24-Slices/546660408?classType=REGULAR&from=/search',
+    category: 'Dairy & Eggs',
+    brand: 'Sargento',
+    estimatedPrice: 5.98,
+    packageSize: '24 slices (16 oz)',
+    isPantryStaple: false,
+    keywords: ['pepperjack cheese', 'pepper jack cheese', 'sargento pepper jack', 'sliced pepper jack', 'pepperjack', 'jack cheese'],
+  },
+  {
+    id: 'wm-fav-mayo',
+    itemId: '23872263',
+    name: 'Blue Plate Real Mayonnaise',
+    walmartQuery: 'Blue Plate Real Mayonnaise 30 fl oz',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Blue-Plate-Real-Mayonnaise-30-fl-oz/23872263?classType=REGULAR&athbdg=L1200&adsRedirect=true',
+    category: 'Pantry & Dry Goods',
+    brand: 'Blue Plate',
+    estimatedPrice: 4.48,
+    packageSize: '30 fl oz jar',
+    isPantryStaple: true,
+    keywords: ['mayo', 'mayonnaise', 'blue plate mayonnaise', 'blue plate mayo', 'real mayonnaise', 'sandwich spread'],
+  },
+  {
+    id: 'wm-fav-bread',
+    itemId: '10315752',
+    name: 'Great Value White Sandwich Bread',
+    walmartQuery: 'Great Value White Sandwich Bread 20 oz',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Great-Value-White-Sandwich-Bread-20-oz/10315752?classType=REGULAR&athbdg=L1200&from=/search',
+    category: 'Bakery',
+    brand: 'Great Value',
+    estimatedPrice: 1.42,
+    packageSize: '20 oz loaf',
+    isPantryStaple: false,
+    keywords: ['bread', 'white bread', 'sandwich bread', 'great value bread', 'sliced bread', 'white sandwich bread', 'toast'],
+  },
+  {
+    id: 'wm-fav-sandwich-meat',
+    itemId: '15240745',
+    name: 'Oscar Mayer Deli Fresh Rotisserie Seasoned Chicken Breast Deli Meat',
+    walmartQuery: 'Oscar Mayer Deli Fresh Rotisserie Seasoned Chicken Breast Deli Meat 16 oz',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Oscar-Mayer-Deli-Fresh-Deli-Meat-for-Sandwiches-and-Easy-Lunches-Rotisserie-Seasoned-Chicken-Breast-No-Artificial-Preservatives-16-oz/15240745?classType=REGULAR&from=/search',
+    category: 'Meat & Seafood',
+    brand: 'Oscar Mayer',
+    estimatedPrice: 6.48,
+    packageSize: '16 oz family size tub',
+    isPantryStaple: false,
+    keywords: ['sandwich meat', 'deli meat', 'oscar mayer deli fresh', 'lunch meat', 'chicken breast deli meat', 'sliced deli meat', 'cold cuts'],
+  },
+  {
+    id: 'wm-fav-pickles',
+    itemId: '378941019',
+    name: 'Great Value Hamburger Dill Chip Pickles',
+    walmartQuery: 'Great Value Hamburger Dill Chip Pickles 32 fl oz',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Great-Value-Hamburger-Dill-Chip-Pickles-32-fl-oz/378941019?classType=VARIANT&athbdg=L1102&from=/search',
+    category: 'Pantry & Dry Goods',
+    brand: 'Great Value',
+    estimatedPrice: 2.44,
+    packageSize: '32 fl oz jar',
+    isPantryStaple: true,
+    keywords: ['pickles', 'dill pickles', 'hamburger pickles', 'pickle chips', 'dill chips', 'great value pickles', 'dill chip pickles'],
+  },
+  {
+    id: 'wm-fav-garlic-powder',
+    itemId: '676979470',
+    name: 'Great Value Garlic Powder',
+    walmartQuery: 'Great Value Garlic Powder 3.4 oz',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Great-Value-Garlic-Powder-3-4-oz/676979470?classType=VARIANT&athbdg=L1200&from=/search',
+    category: 'Spices & Seasonings',
+    brand: 'Great Value',
+    estimatedPrice: 1.34,
+    packageSize: '3.4 oz bottle',
+    isPantryStaple: true,
+    keywords: ['garlic powder', 'powdered garlic', 'garlic seasoning', 'great value garlic powder', 'garlic spice'],
+  },
+  {
+    id: 'wm-fav-dijon-honey-mustard',
+    itemId: '326914635',
+    name: 'Great Value Honey Dijon Mustard',
+    walmartQuery: 'Great Value Honey Dijon Mustard 12 oz',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Great-Value-Honey-Dijon-Mustard-12-oz/326914635?classType=VARIANT&athbdg=L1200&from=/search',
+    category: 'Pantry & Dry Goods',
+    brand: 'Great Value',
+    estimatedPrice: 1.98,
+    packageSize: '12 oz squeeze bottle',
+    isPantryStaple: true,
+    keywords: ['dijon honey mustard', 'honey dijon mustard', 'honey dijon', 'great value honey dijon', 'dijon mustard'],
+  },
+  {
+    id: 'wm-fav-honey-mustard',
+    itemId: '8865373647',
+    name: 'Chick-Fil-A Honey Mustard Sauce',
+    walmartQuery: 'Chick-Fil-A Honey Mustard Sauce 16 fl oz Squeeze Bottle',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Chick-Fil-A-Honey-Mustard-Sauce-16-fl-oz-Squeeze-Bottle/8865373647?classType=REGULAR&adsRedirect=true',
+    category: 'Pantry & Dry Goods',
+    brand: 'Chick-Fil-A',
+    estimatedPrice: 3.98,
+    packageSize: '16 fl oz squeeze bottle',
+    isPantryStaple: true,
+    keywords: ['honey mustard', 'chick-fil-a honey mustard', 'chick fil a sauce', 'honey mustard sauce', 'chick-fil-a honey mustard sauce'],
+  },
+  {
+    id: 'wm-fav-lettuce',
+    itemId: '10402650',
+    name: 'Fresh Iceberg Lettuce',
+    walmartQuery: 'Fresh Iceberg Lettuce Each',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Fresh-Iceberg-Lettuce-Each/10402650?classType=REGULAR&athbdg=L1200&from=/search',
+    category: 'Produce',
+    brand: 'Fresh',
+    estimatedPrice: 1.88,
+    packageSize: '1 head each',
+    isPantryStaple: false,
+    keywords: ['lettuce', 'iceberg lettuce', 'fresh lettuce', 'head of lettuce', 'salad lettuce', 'fresh iceberg lettuce'],
+  },
+  {
+    id: 'wm-fav-milk',
+    itemId: '10450114',
+    name: 'Great Value Whole Vitamin D Milk',
+    walmartQuery: 'Great Value Whole Vitamin D Milk Gallon Plastic Jug 128 Fl Oz',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Great-Value-Whole-Vitamin-D-Milk-Gallon-Plastic-Jug-128-Fl-Oz/10450114?classType=REGULAR&athbdg=L1200&from=/search',
+    category: 'Dairy & Eggs',
+    brand: 'Great Value',
+    estimatedPrice: 3.12,
+    packageSize: '1 Gallon (128 fl oz)',
+    isPantryStaple: false,
+    keywords: ['milk', 'whole milk', 'vitamin d milk', 'gallon milk', 'great value milk', 'dairy milk', 'whole vitamin d milk'],
+  },
+  {
+    id: 'wm-fav-green-tea',
+    itemId: '20680639',
+    name: 'Great Value Green Tea Bags',
+    walmartQuery: 'Great Value Green Tea Bags 2.5 oz 40 Count',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Great-Value-Green-Tea-Bags-2-5-oz-40-Count/20680639?classType=REGULAR&athbdg=L1200&from=/search',
+    category: 'Pantry & Dry Goods',
+    brand: 'Great Value',
+    estimatedPrice: 2.18,
+    packageSize: '40 count box (2.5 oz)',
+    isPantryStaple: true,
+    keywords: ['green tea', 'tea bags', 'green tea bags', 'great value tea', 'tea', 'great value green tea'],
+  },
+  {
+    id: 'wm-fav-spaghetti',
+    itemId: '10534115',
+    name: 'Great Value Spaghetti Pasta',
+    walmartQuery: 'Great Value Spaghetti 16oz',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Great-Value-Spaghetti-16oz/10534115?classType=VARIANT&athbdg=L1200&from=/search',
+    category: 'Pantry & Dry Goods',
+    brand: 'Great Value',
+    estimatedPrice: 0.98,
+    packageSize: '16 oz box',
+    isPantryStaple: true,
+    keywords: ['spaghetti noodles', 'spaghetti', 'spaghetti pasta', 'pasta noodles', 'great value spaghetti', 'pasta'],
+  },
+  {
+    id: 'wm-fav-ground-beef',
+    itemId: '15136790',
+    name: '73% Lean / 27% Fat Ground Beef Roll',
+    walmartQuery: '73 Lean 27 Fat Ground Beef 1 lb Roll Fresh All Natural',
+    walmartSearchUrl: 'https://www.walmart.com/ip/73-Lean-27-Fat-Ground-Beef-1-lb-Roll-Fresh-All-Natural/15136790?classType=REGULAR&athbdg=L1102&from=/search',
+    category: 'Meat & Seafood',
+    brand: 'All Natural',
+    estimatedPrice: 3.97,
+    packageSize: '1 lb roll',
+    isPantryStaple: false,
+    keywords: ['ground beef', '73/27 ground beef', 'beef roll', 'minced beef', 'hamburger meat', 'ground chuck', 'fresh ground beef'],
+  },
+  {
+    id: 'wm-fav-parmesan',
+    itemId: '48676850',
+    name: 'Frigo Shredded Parmesan Cheese',
+    walmartQuery: 'Frigo Shredded Parmesan Cheese 10 oz Refrigerated Plastic Cup',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Frigo-Shredded-Parmesan-Cheese-10-oz-Refrigerated-Plastic-Cup/48676850?classType=REGULAR&from=/search',
+    category: 'Dairy & Eggs',
+    brand: 'Frigo',
+    estimatedPrice: 4.48,
+    packageSize: '10 oz refrigerated cup',
+    isPantryStaple: false,
+    keywords: ['parmessian cheese', 'parmesan cheese', 'shredded parmesan', 'frigo parmesan', 'parmigiano', 'parmesan', 'frigo shredded parmesan'],
+  },
+  {
+    id: 'wm-fav-alfredo',
+    itemId: '10291084',
+    name: 'Bertolli Classic Alfredo Sauce with Aged Parmesan',
+    walmartQuery: 'Bertolli Classic Alfredo Sauce Pasta Sauce with Aged Parmesan 15 oz',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Bertolli-Classic-Alfredo-Sauce-Pasta-Sauce-with-Aged-Parmesan-15-oz/10291084?classType=REGULAR&athbdg=L1102&adsRedirect=true',
+    category: 'Pantry & Dry Goods',
+    brand: 'Bertolli',
+    estimatedPrice: 2.88,
+    packageSize: '15 oz jar',
+    isPantryStaple: true,
+    keywords: ['alfredo sauce', 'alfredo pasta sauce', 'bertolli alfredo', 'bertolli classic alfredo', 'cream sauce', 'pasta sauce'],
+  },
+  {
+    id: 'wm-fav-tortillas',
+    itemId: '11964663',
+    name: 'La Banderita Soft Taco Flour Tortillas',
+    walmartQuery: 'La Banderita Soft Taco Flour Tortillas 16 oz 10 Count',
+    walmartSearchUrl: 'https://www.walmart.com/ip/La-Banderita-Soft-Taco-Flour-Tortillas-16-oz-10-Count/11964663?classType=REGULAR&athbdg=L1600&from=/search',
+    category: 'Bakery',
+    brand: 'La Banderita',
+    estimatedPrice: 2.48,
+    packageSize: '10 count pack (16 oz)',
+    isPantryStaple: false,
+    keywords: ['tortillas', 'flour tortillas', 'soft taco tortillas', 'la banderita tortillas', 'taco tortillas', 'soft tortillas'],
+  },
+  {
+    id: 'wm-fav-toothpaste',
+    itemId: '2396711494',
+    name: 'Sensodyne Clinical White Toothpaste (Sensitive Whitening)',
+    walmartQuery: 'Sensodyne Clinical White Toothpaste Clinically Proven Whitening 3.4 Oz',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Sensodyne-Clinical-White-Toothpaste-Clinically-Proven-Whitening-for-Sensitive-Teeth-Enamel-Strengthening-3-4-Oz/2396711494?classType=REGULAR&athbdg=L1600&adsRedirect=true',
+    category: 'Personal Care & Toiletries',
+    brand: 'Sensodyne',
+    estimatedPrice: 8.98,
+    packageSize: '3.4 oz tube',
+    isPantryStaple: false,
+    keywords: ['toothpaste', 'sensodyne', 'sensodyne toothpaste', 'sensodyne clinical white', 'toiletries', 'dental care', 'whitening toothpaste', 'personal care'],
+  },
+  {
+    id: 'wm-fav-fancy-feast-gravy',
+    itemId: '17252360',
+    name: 'Purina Fancy Feast Gravy Lovers Chicken Feast in Gravy',
+    walmartQuery: 'Purina Fancy Feast Gravy Lovers Wet Cat Food Chicken Feast in Gravy 3 oz Can',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Purina-Fancy-Feast-Gravy-Lovers-Wet-Cat-Food-Chicken-Feast-in-Gravy-3-oz-Can/17252360?classType=VARIANT&athbdg=L1600&from=/search',
+    category: 'Pet Care',
+    brand: 'Purina Fancy Feast',
+    estimatedPrice: 0.88,
+    packageSize: '3 oz can',
+    isPantryStaple: false,
+    keywords: ['fancy feast w/gravy', 'fancy feast gravy lovers', 'fancy feast with gravy', 'fancy feast', 'cat food gravy', 'wet cat food', 'purina fancy feast gravy', 'cat food'],
+  },
+  {
+    id: 'wm-fav-fancy-feast-no-gravy',
+    itemId: '10291920',
+    name: 'Purina Fancy Feast Chicken Feast Pate Wet Cat Food (12-Pack)',
+    walmartQuery: 'Purina Fancy Feast Chicken Feast Pate Wet Cat Food 3 oz Cans 12 Pack',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Purina-Fancy-Feast-Chicken-Feast-Pate-Wet-Cat-Food-3-oz-Cans-12-Pack/10291920?classType=VARIANT&from=/search',
+    category: 'Pet Care',
+    brand: 'Purina Fancy Feast',
+    estimatedPrice: 9.98,
+    packageSize: '12-Pack (3 oz cans)',
+    isPantryStaple: false,
+    keywords: ['fancy feast w/o gravy', 'fancy feast without gravy', 'fancy feast pate', 'fancy feast classic pate', 'purina fancy feast pate', 'cat food pate', 'cat food 12 pack', 'cat food'],
+  },
+  {
+    id: 'wm-fav-black-pepper',
+    itemId: '44662573',
+    name: 'Great Value Ground Black Pepper',
+    walmartQuery: 'Great Value Ground Black Pepper 3 oz',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Great-Value-Ground-Black-Pepper-3-oz/44662573?classType=REGULAR&athbdg=L1102&from=/search',
+    category: 'Spices & Seasonings',
+    brand: 'Great Value',
+    estimatedPrice: 2.14,
+    packageSize: '3 oz bottle',
+    isPantryStaple: true,
+    keywords: ['black pepper', 'ground black pepper', 'pepper', 'great value black pepper', 'ground pepper', 'table pepper'],
+  },
+  {
+    id: 'wm-fav-cream-of-chicken',
+    itemId: '10316087',
+    name: 'Great Value Cream of Chicken Condensed Soup (Family Size 26 oz)',
+    walmartQuery: 'Great Value Cream of Chicken Condensed Soup Family Size 26 oz',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Great-Value-Cream-of-Chicken-Condensed-Soup-Family-Size-26-oz-Shelf-Stable/10316087?classType=VARIANT&athbdg=L1102&from=/search',
+    category: 'Pantry & Dry Goods',
+    brand: 'Great Value',
+    estimatedPrice: 1.98,
+    packageSize: '26 oz can (Family Size)',
+    isPantryStaple: true,
+    keywords: ['cream of chicken', 'cream of chicken soup', 'condensed soup', 'cream of chicken condensed soup', 'great value cream of chicken', 'chicken soup'],
+  },
+  {
+    id: 'wm-fav-italian-seasoning',
+    itemId: '637648335',
+    name: 'Great Value Italian Seasoning',
+    walmartQuery: 'Great Value Italian Seasoning 0.95 oz',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Great-Value-Italian-Seasoning-0-95-oz/637648335?classType=REGULAR&athbdg=L1200&from=/search',
+    category: 'Spices & Seasonings',
+    brand: 'Great Value',
+    estimatedPrice: 1.24,
+    packageSize: '0.95 oz bottle',
+    isPantryStaple: true,
+    keywords: ['italian seasoning', 'italian herbs', 'italian spice blend', 'great value italian seasoning', 'seasoning'],
+  },
+  {
+    id: 'wm-fav-crushed-red-pepper',
+    itemId: '217612954',
+    name: 'Great Value Crushed Red Pepper',
+    walmartQuery: 'Great Value Crushed Red Pepper 1.75 oz',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Great-Value-Crushed-Red-Pepper-1-75-oz/217612954?classType=VARIANT&athbdg=L1200&from=/search',
+    category: 'Spices & Seasonings',
+    brand: 'Great Value',
+    estimatedPrice: 1.34,
+    packageSize: '1.75 oz bottle',
+    isPantryStaple: true,
+    keywords: ['crushed red pepper', 'red pepper flakes', 'chili flakes', 'pepper flakes', 'great value crushed red pepper', 'hot pepper flakes'],
+  },
+  {
+    id: 'wm-fav-general-tso-sauce',
+    itemId: '23591277',
+    name: 'House of Tsang General Tso Stir Fry Sauce',
+    walmartQuery: 'House of Tsang General Tso Stir Fry Sauce 12.6 oz Bottle',
+    walmartSearchUrl: 'https://www.walmart.com/ip/House-of-Tsang-General-Tso-Stir-Fry-Sauce-12-6-oz-Bottle/23591277?classType=VARIANT&from=/search',
+    category: 'Pantry & Dry Goods',
+    brand: 'House of Tsang',
+    estimatedPrice: 3.78,
+    packageSize: '12.6 oz bottle',
+    isPantryStaple: true,
+    keywords: ['general tso sauce', 'general tso stir fry sauce', 'house of tsang general tso', 'stir fry sauce', 'general tso'],
+  },
+  {
+    id: 'wm-fav-soy-sauce',
+    itemId: '10315653',
+    name: 'Great Value Naturally Brewed Soy Sauce',
+    walmartQuery: 'Great Value Naturally Brewed Soy Sauce 15 fl oz',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Great-Value-Naturally-Brewed-Soy-Sauce-15-fl-oz/10315653?classType=VARIANT&athbdg=L1102&from=/search',
+    category: 'Pantry & Dry Goods',
+    brand: 'Great Value',
+    estimatedPrice: 1.68,
+    packageSize: '15 fl oz bottle',
+    isPantryStaple: true,
+    keywords: ['soy sauce', 'brewed soy sauce', 'great value soy sauce', 'soya sauce', 'naturally brewed soy sauce'],
+  },
+  {
+    id: 'wm-fav-sour-cream',
+    itemId: '10309452',
+    name: 'Daisy Pure and Natural Sour Cream',
+    walmartQuery: 'Daisy Pure and Natural Sour Cream 24 oz Tub Refrigerated',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Daisy-Pure-and-Natural-Sour-Cream-24-oz-1-5-lb-Tub-Refrigerated/10309452?classType=REGULAR&from=/search',
+    category: 'Dairy & Eggs',
+    brand: 'Daisy',
+    estimatedPrice: 2.88,
+    packageSize: '24 oz tub (1.5 lb)',
+    isPantryStaple: false,
+    keywords: ['sour cream', 'daisy sour cream', 'pure and natural sour cream', 'sour cream tub', 'daisy'],
+  },
+];
+
 export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
+  ...USER_FAVORITE_ESSENTIALS,
   // --- MEAT & POULTRY & SEAFOOD ---
   {
     id: 'wm-meat-rotisserie',
@@ -1393,6 +1844,12 @@ function hasFoodConflict(queryCleaned: string, candidate: WalmartGroceryProduct)
  * Guarantees that only authentic food products are returned, never conflicting or distorted items!
  */
 export function matchWalmartGroceryItem(rawName: string, categoryHint?: string): WalmartGroceryProduct {
+  const extractedId = extractWalmartItemId(rawName);
+  if (extractedId) {
+    const directMatch = WALMART_GROCERY_CATALOG.find((p) => p.itemId === extractedId);
+    if (directMatch) return directMatch;
+  }
+
   const cleaned = cleanRawIngredientText(rawName);
 
   // User Requirement: Default chicken for all recipes must be Fresh Whole Rotisserie Chicken!

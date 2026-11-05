@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Clock, Users, ArrowUpRight, ChefHat, Check, Zap, ShoppingBag } from 'lucide-react';
-import { Recipe } from '../types';
+import { Recipe, DefaultSelectionSettings } from '../types';
 import { calculateRetailPackageQuantity } from '../data/walmartGroceryCatalog';
+import { applyDefaultSelectionToRecipe } from '../utils/defaultSelection';
 
 interface RecipeCardProps {
   recipe: Recipe;
   onSelect: (recipe: Recipe) => void;
   onAddAllToCart: (recipe: Recipe) => void;
   isAddedToCart: boolean;
+  defaultSelectionSettings?: DefaultSelectionSettings;
 }
 
 export const RecipeCard: React.FC<RecipeCardProps> = ({
@@ -15,13 +17,19 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
   onSelect,
   onAddAllToCart,
   isAddedToCart,
+  defaultSelectionSettings,
 }) => {
   const [imgError, setImgError] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
 
-  // Calculate estimated total for non-pantry items with retail packages
-  const nonPantryItems = recipe.ingredients.filter((i) => !i.inPantry);
-  const estimatedTotal = nonPantryItems.reduce((acc, curr) => {
+  // Calculate items to add and estimated total based on default selection settings
+  const effectiveSelection = defaultSelectionSettings
+    ? applyDefaultSelectionToRecipe(recipe.ingredients, defaultSelectionSettings)
+    : new Set(recipe.ingredients.filter((i) => !i.inPantry).map((i) => i.id));
+
+  const itemsToAdd = recipe.ingredients.filter((i) => !i.inPantry && effectiveSelection.has(i.id));
+
+  const estimatedTotal = itemsToAdd.reduce((acc, curr) => {
     const pkgs = calculateRetailPackageQuantity(curr.amount || 1, curr.unit, curr.packageSize, curr.category);
     return acc + curr.estimatedPrice * pkgs;
   }, 0);
@@ -148,7 +156,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
           ) : (
             <>
               <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
-              <span>⚡ Auto-Add ({nonPantryItems.length})</span>
+              <span>⚡ Auto-Add ({itemsToAdd.length})</span>
             </>
           )}
         </button>

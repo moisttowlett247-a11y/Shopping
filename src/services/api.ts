@@ -27,7 +27,7 @@ function bindIngredientsToWalmartCatalog(ingredients: Ingredient[]): Ingredient[
       category: ing.category || match.category || 'Pantry & Dry Goods',
       walmartQuery,
       walmartSearchUrl: `https://www.walmart.com/search?q=${encodeURIComponent(walmartQuery)}`,
-      walmartDirectAddUrl: `https://www.walmart.com/search?q=${encodeURIComponent(walmartQuery)}`,
+      walmartDirectAddUrl: itemId ? `https://www.walmart.com/ip/${itemId}` : `https://www.walmart.com/search?q=${encodeURIComponent(walmartQuery)}`,
       brandTier: ing.brandTier || 'great_value',
       estimatedPrice: ing.estimatedPrice && ing.estimatedPrice > 0 ? ing.estimatedPrice : (match.estimatedPrice || 2.48),
       packageSize,
@@ -40,15 +40,30 @@ function bindIngredientsToWalmartCatalog(ingredients: Ingredient[]): Ingredient[
 /**
  * Intelligent Client-Side Recipe Parser for standalone GitHub Pages hosting
  */
-function clientSideParseRecipe(recipeText: string, brandPreference: string = 'great_value'): Recipe {
+function clientSideParseRecipe(recipeText: string, brandPreference: string = 'great_value', customTitle?: string): Recipe {
   const lines = recipeText.split('\n').map((l) => l.trim()).filter(Boolean);
-  const title = lines[0] ? lines[0].replace(/^#+\s*/, '') : 'Imported Recipe';
+  let title = customTitle && customTitle.trim() ? customTitle.trim() : '';
+  let startIndex = 1;
+
+  if (!title) {
+    if (lines[0] && !lines[0].startsWith('-') && !lines[0].startsWith('*') && !lines[0].startsWith('•') && !/^\d+/.test(lines[0])) {
+      title = lines[0].replace(/^#+\s*/, '');
+      startIndex = 1;
+    } else {
+      title = 'Custom Imported Recipe';
+      startIndex = 0;
+    }
+  } else if (lines[0] && !lines[0].startsWith('-') && !lines[0].startsWith('*') && !lines[0].startsWith('•') && !/^\d+/.test(lines[0])) {
+    startIndex = 1;
+  } else {
+    startIndex = 0;
+  }
 
   const ingredientLines: string[] = [];
   const instructionLines: string[] = [];
   let isIngredients = true;
 
-  for (let i = 1; i < lines.length; i++) {
+  for (let i = startIndex; i < lines.length; i++) {
     const line = lines[i];
     const lower = line.toLowerCase();
     if (lower.includes('instruction') || lower.includes('direction') || lower.includes('method') || lower.includes('steps:')) {
@@ -132,10 +147,10 @@ function clientSideParseRecipe(recipeText: string, brandPreference: string = 'gr
 /**
  * Intelligent Client-Side Recipe Generator for standalone GitHub Pages hosting
  */
-function clientSideGenerateRecipe(prompt: string, servings: number = 4, budget: string = 'budget_friendly', cuisine: string = 'Any'): Recipe {
+function clientSideGenerateRecipe(prompt: string, servings: number = 4, budget: string = 'budget_friendly', cuisine: string = 'Any', customTitle?: string): Recipe {
   const p = prompt.toLowerCase();
-  let title = prompt.trim();
-  if (!title.toLowerCase().includes('recipe') && !title.toLowerCase().includes('skillet') && !title.toLowerCase().includes('bowl')) {
+  let title = customTitle && customTitle.trim() ? customTitle.trim() : prompt.trim();
+  if (!customTitle && !title.toLowerCase().includes('recipe') && !title.toLowerCase().includes('skillet') && !title.toLowerCase().includes('bowl')) {
     title = `${prompt.trim().charAt(0).toUpperCase() + prompt.trim().slice(1)} Dish`;
   }
 
@@ -225,12 +240,12 @@ function clientSideSubstitutions(ingredientName: string, originalPrice?: number)
   return [gvOption, ...catalogMatches];
 }
 
-export async function parseRecipeText(recipeText: string, brandPreference: string = 'great_value'): Promise<Recipe> {
+export async function parseRecipeText(recipeText: string, brandPreference: string = 'great_value', customTitle?: string): Promise<Recipe> {
   try {
     const res = await fetch('/api/recipe/parse', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ recipeText, brandPreference }),
+      body: JSON.stringify({ recipeText, brandPreference, title: customTitle }),
     });
     if (res.ok) {
       const data = await res.json();
@@ -238,6 +253,7 @@ export async function parseRecipeText(recipeText: string, brandPreference: strin
         const boundIngredients = bindIngredientsToWalmartCatalog(data.recipe.ingredients);
         return {
           ...data.recipe,
+          title: customTitle?.trim() || data.recipe.title || 'Custom Imported Recipe',
           id: `recipe-${Date.now()}`,
           baseServings: data.recipe.servings || 4,
           image: heroImg,
@@ -252,15 +268,15 @@ export async function parseRecipeText(recipeText: string, brandPreference: strin
   }
 
   // Instant zero-failure fallback for static GitHub Pages hosting
-  return clientSideParseRecipe(recipeText, brandPreference);
+  return clientSideParseRecipe(recipeText, brandPreference, customTitle);
 }
 
-export async function generateAiRecipe(prompt: string, servings: number = 4, budget: string = 'budget_friendly', cuisine: string = 'Any'): Promise<Recipe> {
+export async function generateAiRecipe(prompt: string, servings: number = 4, budget: string = 'budget_friendly', cuisine: string = 'Any', customTitle?: string): Promise<Recipe> {
   try {
     const res = await fetch('/api/recipe/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, servings, budget, cuisine }),
+      body: JSON.stringify({ prompt, servings, budget, cuisine, title: customTitle }),
     });
     if (res.ok) {
       const data = await res.json();
@@ -268,6 +284,7 @@ export async function generateAiRecipe(prompt: string, servings: number = 4, bud
         const boundIngredients = bindIngredientsToWalmartCatalog(data.recipe.ingredients);
         return {
           ...data.recipe,
+          title: customTitle?.trim() || data.recipe.title || 'Custom AI Recipe',
           id: `recipe-ai-${Date.now()}`,
           baseServings: data.recipe.servings || 4,
           image: heroImg,
@@ -282,7 +299,7 @@ export async function generateAiRecipe(prompt: string, servings: number = 4, bud
   }
 
   // Instant zero-failure fallback for static GitHub Pages hosting
-  return clientSideGenerateRecipe(prompt, servings, budget, cuisine);
+  return clientSideGenerateRecipe(prompt, servings, budget, cuisine, customTitle);
 }
 
 export async function getIngredientSubstitutions(ingredientName: string, reason: string = 'budget', originalPrice?: number): Promise<SubstitutionOption[]> {

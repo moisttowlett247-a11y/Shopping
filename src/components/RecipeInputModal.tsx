@@ -24,10 +24,12 @@ export const RecipeInputModal: React.FC<RecipeInputModalProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Tab 1: Paste Text State
+  const [pasteTitle, setPasteTitle] = useState('');
   const [pastedText, setPastedText] = useState('');
   const [brandPreference, setBrandPreference] = useState<'great_value' | 'name_brand' | 'organic'>('great_value');
 
   // Tab 2: AI Recipe Generator State
+  const [aiTitle, setAiTitle] = useState('');
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiServings, setAiServings] = useState(4);
   const [aiCuisine, setAiCuisine] = useState('American');
@@ -54,7 +56,7 @@ export const RecipeInputModal: React.FC<RecipeInputModalProps> = ({
     setErrorMessage(null);
 
     try {
-      const parsedRecipe = await parseRecipeText(pastedText, brandPreference);
+      const parsedRecipe = await parseRecipeText(pastedText, brandPreference, pasteTitle.trim() || undefined);
       onRecipeCreated(parsedRecipe);
       onClose();
     } catch (err: any) {
@@ -73,7 +75,7 @@ export const RecipeInputModal: React.FC<RecipeInputModalProps> = ({
     setErrorMessage(null);
 
     try {
-      const generated = await generateAiRecipe(aiPrompt, aiServings, aiBudget, aiCuisine);
+      const generated = await generateAiRecipe(aiPrompt, aiServings, aiBudget, aiCuisine, aiTitle.trim() || undefined);
       onRecipeCreated(generated);
       onClose();
     } catch (err: any) {
@@ -140,6 +142,7 @@ export const RecipeInputModal: React.FC<RecipeInputModalProps> = ({
 
   const loadSample = (sampleType: 'fajitas' | 'chili') => {
     if (sampleType === 'fajitas') {
+      setPasteTitle('One-Pan Chicken Fajitas');
       setPastedText(`One-Pan Chicken Fajitas
 Prep: 15 mins | Cook: 15 mins | Servings: 4
 
@@ -161,6 +164,7 @@ Instructions:
 3. Sear for 8-10 minutes, stirring occasionally, until chicken reaches 165°F and veggies are tender-crisp with slight char.
 4. Warm tortillas and serve hot with cheese, salsa, sour cream, and lime wedges.`);
     } else {
+      setPasteTitle('Classic Hearty Beef Chili');
       setPastedText(`Classic Hearty Beef Chili
 Prep: 15 mins | Cook: 40 mins | Servings: 6
 
@@ -262,9 +266,22 @@ Instructions:
         {/* Tab 1: Paste Text Content */}
         {activeTab === 'paste' && (
           <form onSubmit={handleParseRecipe} className="p-6 space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-900 mb-1">
+                Recipe Title <span className="text-slate-400 font-normal">(Optional — enter a custom title or let it auto-detect from your text)</span>
+              </label>
+              <input
+                type="text"
+                value={pasteTitle}
+                onChange={(e) => setPasteTitle(e.target.value)}
+                placeholder="e.g. Grandma's Chicken Pot Pie"
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-900 focus:outline-blue-600"
+              />
+            </div>
+
             <div className="flex items-center justify-between">
               <label className="block text-xs font-bold text-slate-900">
-                Paste Recipe Title, Ingredients & Directions
+                Paste Recipe Ingredients & Directions
               </label>
               <div className="flex items-center gap-2 text-xs text-slate-500">
                 <span>Quick samples:</span>
@@ -372,6 +389,19 @@ Instructions:
         {/* Tab 2: AI Recipe Generator Content */}
         {activeTab === 'ai' && (
           <form onSubmit={handleGenerateAi} className="p-6 space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-900 mb-1">
+                Custom Recipe Title <span className="text-slate-400 font-normal">(Optional — give it your own name or let AI generate one)</span>
+              </label>
+              <input
+                type="text"
+                value={aiTitle}
+                onChange={(e) => setAiTitle(e.target.value)}
+                placeholder="e.g. Quick Honey Garlic Chicken"
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-900 focus:outline-blue-600"
+              />
+            </div>
+
             <div>
               <label className="block text-xs font-bold text-slate-900 mb-1">
                 What recipe would you like to cook?
