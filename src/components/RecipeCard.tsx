@@ -4,12 +4,15 @@ import { Recipe, DefaultSelectionSettings } from '../types';
 import { calculateRetailPackageQuantity } from '../data/walmartGroceryCatalog';
 import { applyDefaultSelectionToRecipe } from '../utils/defaultSelection';
 
+import { isIngredientInPantry } from '../utils/pantry';
+
 interface RecipeCardProps {
   recipe: Recipe;
   onSelect: (recipe: Recipe) => void;
   onAddAllToCart: (recipe: Recipe) => void;
   isAddedToCart: boolean;
   defaultSelectionSettings?: DefaultSelectionSettings;
+  pantryItems?: Set<string>;
 }
 
 export const RecipeCard: React.FC<RecipeCardProps> = ({
@@ -18,16 +21,17 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
   onAddAllToCart,
   isAddedToCart,
   defaultSelectionSettings,
+  pantryItems,
 }) => {
   const [imgError, setImgError] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
 
-  // Calculate items to add and estimated total based on default selection settings
+  // Calculate items to add and estimated total based on default selection settings and pantry
   const effectiveSelection = defaultSelectionSettings
     ? applyDefaultSelectionToRecipe(recipe.ingredients, defaultSelectionSettings)
-    : new Set(recipe.ingredients.filter((i) => !i.inPantry).map((i) => i.id));
+    : new Set(recipe.ingredients.filter((i) => !isIngredientInPantry(i, pantryItems)).map((i) => i.id));
 
-  const itemsToAdd = recipe.ingredients.filter((i) => !i.inPantry && effectiveSelection.has(i.id));
+  const itemsToAdd = recipe.ingredients.filter((i) => !isIngredientInPantry(i, pantryItems) && effectiveSelection.has(i.id));
 
   const estimatedTotal = itemsToAdd.reduce((acc, curr) => {
     const pkgs = calculateRetailPackageQuantity(curr.amount || 1, curr.unit, curr.packageSize, curr.category);

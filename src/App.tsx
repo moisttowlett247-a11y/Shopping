@@ -12,6 +12,7 @@ import {
   X,
   RotateCcw,
   Store,
+  Package,
 } from 'lucide-react';
 import { Recipe, Ingredient, SubstitutionOption } from './types';
 import { INITIAL_RECIPES } from './data/curatedRecipes';
@@ -24,10 +25,12 @@ import { WalmartCartDrawer, CartItem } from './components/WalmartCartDrawer';
 import { SubstituteModal } from './components/SubstituteModal';
 import { DefaultSelectionModal } from './components/DefaultSelectionModal';
 import { QuickItemSelectorModal } from './components/QuickItemSelectorModal';
+import { PantryManagerModal } from './components/PantryManagerModal';
 import { HowItWorks } from './components/HowItWorks';
 import { matchWalmartGroceryItem, calculateRetailPackageQuantity } from './data/walmartGroceryCatalog';
 import { DefaultSelectionSettings } from './types';
 import { DEFAULT_SELECTION_SETTINGS, applyDefaultSelectionToRecipe } from './utils/defaultSelection';
+import { isIngredientInPantry } from './utils/pantry';
 
 // Storage version key to guarantee old corrupt/hallucinated SKU items or stale quantities
 // are purged from the user's browser localStorage on first load!
@@ -43,6 +46,14 @@ function sanitizeIngredientUrls<T extends Ingredient>(ing: T): T {
     ? ing.itemId
     : (match.itemId && /^\d+$/.test(match.itemId) ? match.itemId : undefined);
 
+  const directUrl = (ing.walmartDirectAddUrl && ing.walmartDirectAddUrl.trim() !== '' && ing.walmartDirectAddUrl.includes('walmart.com'))
+    ? ing.walmartDirectAddUrl
+    : (validItemId ? `https://www.walmart.com/ip/${validItemId}` : match.walmartSearchUrl);
+
+  const searchUrl = (ing.walmartSearchUrl && ing.walmartSearchUrl.trim() !== '' && ing.walmartSearchUrl.includes('walmart.com'))
+    ? ing.walmartSearchUrl
+    : directUrl;
+
   return {
     ...ing,
     itemId: validItemId, // Verified authentic Walmart item ID for 1-click auto-add
@@ -51,8 +62,8 @@ function sanitizeIngredientUrls<T extends Ingredient>(ing: T): T {
     walmartQuery: ing.walmartQuery && ing.walmartQuery.trim() !== '' && !ing.walmartQuery.toLowerCase().includes('undefined')
       ? ing.walmartQuery
       : match.walmartQuery,
-    walmartSearchUrl: match.walmartSearchUrl,
-    walmartDirectAddUrl: validItemId ? `https://www.walmart.com/ip/${validItemId}` : match.walmartSearchUrl,
+    walmartSearchUrl: searchUrl,
+    walmartDirectAddUrl: directUrl,
     estimatedPrice: ing.estimatedPrice && ing.estimatedPrice > 0 ? ing.estimatedPrice : (match.estimatedPrice || 2.48),
     packageSize: ing.packageSize && ing.packageSize.trim() !== '' ? ing.packageSize : (match.packageSize || '1 package'),
   };
@@ -122,6 +133,66 @@ export default function App() {
   const [recipeInputTab, setRecipeInputTab] = useState<'paste' | 'manual' | 'ai'>('paste');
   const [substituteIngredient, setSubstituteIngredient] = useState<Ingredient | null>(null);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+
+  // Global Pantry Inventory Items (persisted across sessions)
+  const [pantryItems, setPantryItems] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem('cartcraft_pantry_items');
+      if (saved) {
+        const parsed: string[] = JSON.parse(saved);
+        return new Set(parsed);
+      }
+    } catch (e) {
+      console.error('Error loading pantry items', e);
+    }
+    return new Set<string>();
+  });
+  const [isPantryManagerOpen, setIsPantryManagerOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cartcraft_pantry_items', JSON.stringify(Array.from(pantryItems)));
+    } catch (e) {
+      console.error('Failed to save pantry items', e);
+    }
+  }, [pantryItems]);
+
+  const handleTogglePantryItem = (itemName: string) => {
+    setPantryItems((prev) => {
+      const next = new Set(prev);
+      const lower = itemName.trim().toLowerCase();
+      const existingKey = Array.from(next).find((k) => k.toLowerCase() === lower);
+      if (existingKey) {
+        next.delete(existingKey);
+        showToast(`Removed "${itemName}" from Pantry Inventory.`);
+      } else {
+        next.add(itemName.trim());
+        showToast(`✓ Added "${itemName}" to Pantry Inventory (will be skipped from cart).`);
+      }
+      return next;
+    });
+  };
+
+  const handleAddCustomPantryItem = (itemName: string) => {
+    const trimmed = itemName.trim();
+    if (!trimmed) return;
+    setPantryItems((prev) => {
+      const next = new Set(prev);
+      next.add(trimmed);
+      return next;
+    });
+    showToast(`✓ Added "${trimmed}" to Pantry Inventory.`);
+  };
+
+  const handleRemovePantryItem = (itemName: string) => {
+    setPantryItems((prev) => {
+      const next = new Set(prev);
+      const existingKey = Array.from(next).find((k) => k.toLowerCase() === itemName.trim().toLowerCase());
+      if (existingKey) next.delete(existingKey);
+      else next.delete(itemName);
+      return next;
+    });
+  };
 
   // Global Default Ingredient Selection Settings (persisted across sessions)
   const [defaultSelectionSettings, setDefaultSelectionSettings] = useState<DefaultSelectionSettings>(() => {
@@ -200,7 +271,7 @@ export default function App() {
   ) => {
     const effectiveSelection = selectedIngredientIds || applyDefaultSelectionToRecipe(recipe.ingredients, defaultSelectionSettings);
     const itemsToAdd = recipe.ingredients.filter((i) => {
-      if (i.inPantry) return false;
+      if (isIngredientInPantry(i, pantryItems)) return false;
       if (!effectiveSelection.has(i.id)) return false;
       return true;
     });
@@ -474,12 +545,14 @@ export default function App() {
       {/* Universal Top Bar */}
       <Header
         cartItemCount={cartItems.length}
+        pantryCount={pantryItems.size}
         onOpenCart={() => setIsCartOpen(true)}
         onOpenRecipeInput={() => {
           setRecipeInputTab('paste');
           setIsRecipeInputOpen(true);
         }}
         onOpenQuickAddItems={() => setIsQuickAddOpen(true)}
+        onOpenPantryManager={() => setIsPantryManagerOpen(true)}
         onOpenDefaultSelectionSettings={() => setIsDefaultSelectionOpen(true)}
         onNavigateSection={(id) => {
           setSelectedRecipeId(null);
@@ -502,6 +575,8 @@ export default function App() {
             onOpenCart={() => setIsCartOpen(true)}
             defaultSelectionSettings={defaultSelectionSettings}
             onOpenDefaultSelectionSettings={() => setIsDefaultSelectionOpen(true)}
+            globalPantryItems={pantryItems}
+            onOpenPantryManager={() => setIsPantryManagerOpen(true)}
           />
         ) : (
           /* Storefront & Catalog View */
@@ -517,6 +592,7 @@ export default function App() {
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
               }}
               totalRecipesCount={recipes.length}
+              onOpenPantryManager={() => setIsPantryManagerOpen(true)}
             />
 
             {/* Featured Recipes Section */}
@@ -548,6 +624,15 @@ export default function App() {
                       className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-blue-600 shadow-2xs"
                     />
                   </div>
+
+                  <button
+                    onClick={() => setIsPantryManagerOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl shadow-2xs cursor-pointer whitespace-nowrap transition-colors"
+                    title="Manage items you already have in your pantry so they are excluded from cart"
+                  >
+                    <Package className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Pantry Inventory ({pantryItems.size})</span>
+                  </button>
 
                   <button
                     onClick={() => setIsQuickAddOpen(true)}
@@ -618,7 +703,7 @@ export default function App() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredRecipes.map((recipe) => {
                     const effectiveSelection = applyDefaultSelectionToRecipe(recipe.ingredients, defaultSelectionSettings);
-                    const targetItems = recipe.ingredients.filter((i) => !i.inPantry && effectiveSelection.has(i.id));
+                    const targetItems = recipe.ingredients.filter((i) => !isIngredientInPantry(i, pantryItems) && effectiveSelection.has(i.id));
                     const isAllAdded =
                       targetItems.length > 0 &&
                       targetItems.every((i) => cartItemIds.has(i.id));
@@ -631,6 +716,7 @@ export default function App() {
                         onAddAllToCart={handleAddAllToCart}
                         isAddedToCart={isAllAdded}
                         defaultSelectionSettings={defaultSelectionSettings}
+                        pantryItems={pantryItems}
                       />
                     );
                   })}
@@ -707,6 +793,16 @@ export default function App() {
         onAddCustomItem={handleAddCustomCartItem}
         onUpdateCartQuantity={handleUpdateCartQuantity}
         onOpenCart={() => setIsCartOpen(true)}
+      />
+
+      {/* Pantry Inventory Manager Modal */}
+      <PantryManagerModal
+        isOpen={isPantryManagerOpen}
+        onClose={() => setIsPantryManagerOpen(false)}
+        pantryItems={pantryItems}
+        onTogglePantryItem={handleTogglePantryItem}
+        onAddCustomPantryItem={handleAddCustomPantryItem}
+        onRemovePantryItem={handleRemovePantryItem}
       />
 
       {/* Ingredient Substitution Modal */}

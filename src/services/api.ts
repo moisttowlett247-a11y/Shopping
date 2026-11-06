@@ -17,6 +17,14 @@ function bindIngredientsToWalmartCatalog(ingredients: Ingredient[]): Ingredient[
       ? ing.itemId
       : (match.itemId && /^\d+$/.test(match.itemId) ? match.itemId : undefined);
 
+    const directUrl = (ing.walmartDirectAddUrl && ing.walmartDirectAddUrl.trim() !== '')
+      ? ing.walmartDirectAddUrl
+      : (itemId ? `https://www.walmart.com/ip/${itemId}` : `https://www.walmart.com/search?q=${encodeURIComponent(walmartQuery)}`);
+
+    const searchUrl = (ing.walmartSearchUrl && ing.walmartSearchUrl.trim() !== '')
+      ? ing.walmartSearchUrl
+      : directUrl;
+
     return {
       ...ing,
       id: ing.id || `ing-${Date.now()}-${idx}`,
@@ -26,8 +34,8 @@ function bindIngredientsToWalmartCatalog(ingredients: Ingredient[]): Ingredient[
       unit: ing.unit || 'count',
       category: ing.category || match.category || 'Pantry & Dry Goods',
       walmartQuery,
-      walmartSearchUrl: `https://www.walmart.com/search?q=${encodeURIComponent(walmartQuery)}`,
-      walmartDirectAddUrl: itemId ? `https://www.walmart.com/ip/${itemId}` : `https://www.walmart.com/search?q=${encodeURIComponent(walmartQuery)}`,
+      walmartSearchUrl: searchUrl,
+      walmartDirectAddUrl: directUrl,
       brandTier: ing.brandTier || 'great_value',
       estimatedPrice: ing.estimatedPrice && ing.estimatedPrice > 0 ? ing.estimatedPrice : (match.estimatedPrice || 2.48),
       packageSize,
@@ -158,7 +166,7 @@ function clientSideGenerateRecipe(prompt: string, servings: number = 4, budget: 
   const candidateNames: string[] = [];
 
   if (p.includes('chicken')) {
-    candidateNames.push('Freshness Guaranteed Bagged Rotisserie Chicken', 'Extra Virgin Olive Oil', 'Fresh Garlic Bulbs', 'Fresh Yellow Onions');
+    candidateNames.push('Freshness Guaranteed Traditional Rotisserie Chicken (Chilled)', 'Extra Virgin Olive Oil', 'Fresh Garlic Bulbs', 'Fresh Yellow Onions');
   } else if (p.includes('beef') || p.includes('taco') || p.includes('steak')) {
     candidateNames.push('80/20 Ground Beef', 'White Corn Street Taco Tortillas', 'Fresh Yellow Onions', 'Fresh Cilantro');
   } else if (p.includes('pasta') || p.includes('italian')) {
@@ -167,7 +175,7 @@ function clientSideGenerateRecipe(prompt: string, servings: number = 4, budget: 
     candidateNames.push('Atlantic Salmon Fillets', 'Fresh Whole Lemons', 'Unsalted Sweet Cream Butter', 'Fresh Garlic Bulbs');
   } else {
     // General delicious dish with default bagged rotisserie chicken
-    candidateNames.push('Freshness Guaranteed Bagged Rotisserie Chicken', 'Long Grain White Rice', 'Fresh Baby Spinach', 'Extra Virgin Olive Oil', 'Fresh Garlic Bulbs');
+    candidateNames.push('Freshness Guaranteed Traditional Rotisserie Chicken (Chilled)', 'Long Grain White Rice', 'Fresh Baby Spinach', 'Extra Virgin Olive Oil', 'Fresh Garlic Bulbs');
   }
 
   // Add seasonings and staples

@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import { Sparkles, Plus, ChefHat, ArrowRight } from 'lucide-react';
+import { Sparkles, Plus, ChefHat, ArrowRight, Package } from 'lucide-react';
 import { heroImg } from '../assets/images';
 
 interface HeroProps {
   onOpenRecipeInput: (tab?: 'paste' | 'manual' | 'ai') => void;
   onExploreRecipes: () => void;
   totalRecipesCount: number;
+  onOpenPantryManager?: () => void;
 }
 
 export const Hero: React.FC<HeroProps> = ({
   onOpenRecipeInput,
   onExploreRecipes,
   totalRecipesCount,
+  onOpenPantryManager,
 }) => {
   const [imgLoaded, setImgLoaded] = useState(true);
 
@@ -48,6 +50,16 @@ export const Hero: React.FC<HeroProps> = ({
                 <Plus className="w-4 h-4" />
                 <span>Input / Paste Recipe</span>
               </button>
+
+              {onOpenPantryManager && (
+                <button
+                  onClick={onOpenPantryManager}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg shadow-2xs transition-all cursor-pointer whitespace-nowrap shrink-0"
+                >
+                  <Package className="w-4 h-4 text-emerald-600" />
+                  <span>Pantry Inventory</span>
+                </button>
+              )}
 
               <button
                 onClick={() => onOpenRecipeInput('ai')}

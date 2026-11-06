@@ -120,7 +120,7 @@ export const USER_FAVORITE_ESSENTIALS: WalmartGroceryProduct[] = [
     itemId: '682789099',
     name: 'Freshness Guaranteed Traditional Rotisserie Chicken (Chilled)',
     walmartQuery: 'Freshness Guaranteed Traditional Rotisserie Chicken 36 oz Chilled',
-    walmartSearchUrl: 'https://www.walmart.com/ip/Freshness-Guaranteed-Traditional-Rotisserie-Chicken-36-oz-Chilled/682789099?classType=REGULAR&athbdg=L1102',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Freshness-Guaranteed-Traditional-Rotisserie-Chicken-36-oz-Chilled/682789099?classType=REGULAR&athbdg=L1102&from=/search',
     category: 'Meat & Seafood',
     brand: 'Freshness Guaranteed',
     estimatedPrice: 6.97,
@@ -915,14 +915,14 @@ export const WALMART_GROCERY_CATALOG: WalmartGroceryProduct[] = [
   // --- MEAT & POULTRY & SEAFOOD ---
   {
     id: 'wm-meat-rotisserie',
-    itemId: '325918992',
-    name: 'Freshness Guaranteed Bagged Rotisserie Chicken',
-    walmartQuery: 'Freshness Guaranteed Traditional Rotisserie Chicken in Bag 36 oz',
-    walmartSearchUrl: 'https://www.walmart.com/search?q=Freshness%20Guaranteed%20Bagged%20Rotisserie%20Chicken',
+    itemId: '682789099',
+    name: 'Freshness Guaranteed Traditional Rotisserie Chicken (Chilled)',
+    walmartQuery: 'Freshness Guaranteed Traditional Rotisserie Chicken 36 oz Chilled',
+    walmartSearchUrl: 'https://www.walmart.com/ip/Freshness-Guaranteed-Traditional-Rotisserie-Chicken-36-oz-Chilled/682789099?classType=REGULAR&athbdg=L1102&from=/search',
     category: 'Meat & Seafood',
     brand: 'Freshness Guaranteed',
-    estimatedPrice: 5.97,
-    packageSize: '36 oz (2.25 lb) bag',
+    estimatedPrice: 6.97,
+    packageSize: '36 oz chilled',
     isPantryStaple: false,
     keywords: [
       'bagged rotisserie chicken',
@@ -2313,7 +2313,7 @@ export function matchWalmartGroceryItem(rawName: string, categoryHint?: string):
       !cleaned.includes('soup') &&
       !cleaned.includes('bouillon'))
   ) {
-    const rotisserie = WALMART_GROCERY_CATALOG.find((p) => p.id === 'wm-meat-rotisserie');
+    const rotisserie = WALMART_GROCERY_CATALOG.find((p) => p.id === 'wm-fav-rotisserie-chicken' || p.id === 'wm-meat-rotisserie');
     if (rotisserie) return rotisserie;
   }
 

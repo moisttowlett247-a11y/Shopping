@@ -18,6 +18,7 @@ import {
   Store,
   SlidersHorizontal,
   Pencil,
+  Package,
   Check,
 } from 'lucide-react';
 import { Recipe, Ingredient, DefaultSelectionSettings } from '../types';
@@ -25,6 +26,7 @@ import { IngredientRow } from './IngredientRow';
 import { SwapWalmartProductModal } from './SwapWalmartProductModal';
 import { matchWalmartGroceryItem, calculateRetailPackageQuantity, WalmartGroceryProduct } from '../data/walmartGroceryCatalog';
 import { applyDefaultSelectionToRecipe } from '../utils/defaultSelection';
+import { isIngredientInPantry } from '../utils/pantry';
 
 interface RecipeDetailProps {
   recipe: Recipe;
@@ -37,6 +39,8 @@ interface RecipeDetailProps {
   onOpenCart: () => void;
   defaultSelectionSettings?: DefaultSelectionSettings;
   onOpenDefaultSelectionSettings?: () => void;
+  globalPantryItems?: Set<string>;
+  onOpenPantryManager?: () => void;
 }
 
 export const RecipeDetail: React.FC<RecipeDetailProps> = ({
@@ -50,6 +54,8 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
   onOpenCart,
   defaultSelectionSettings,
   onOpenDefaultSelectionSettings,
+  globalPantryItems,
+  onOpenPantryManager,
 }) => {
   const [servings, setServings] = useState(recipe.servings || 4);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -246,15 +252,15 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
 
   // Calculate pricing breakdown with scaled retail packaging quantities
   const activeItemsToBuy = recipe.ingredients.filter(
-    (i) => !i.inPantry && selectedIngredientIds.has(i.id)
+    (i) => !isIngredientInPantry(i, globalPantryItems) && selectedIngredientIds.has(i.id)
   );
-  const pantryItems = recipe.ingredients.filter((i) => i.inPantry);
+  const pantryIngredients = recipe.ingredients.filter((i) => isIngredientInPantry(i, globalPantryItems));
   const totalEstimatedCost = activeItemsToBuy.reduce((sum, i) => {
     const scaledAmount = (i.amount || 1) * servingMultiplier;
     const pkgs = calculateRetailPackageQuantity(scaledAmount, i.unit, i.packageSize, i.category);
     return sum + i.estimatedPrice * pkgs;
   }, 0);
-  const pantrySavings = pantryItems.reduce((sum, i) => sum + i.estimatedPrice, 0);
+  const pantrySavings = pantryIngredients.reduce((sum, i) => sum + i.estimatedPrice, 0);
   const costPerServing = (totalEstimatedCost / servings).toFixed(2);
 
   // Filter ingredients by category
@@ -414,7 +420,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
                   ${totalEstimatedCost.toFixed(2)}
                 </div>
                 <div className="text-[11px] text-blue-700 font-mono tabular-nums">
-                  ${costPerServing} per serving · {pantryItems.length} pantry items excluded
+                  ${costPerServing} per serving · {pantryIngredients.length} pantry items excluded
                 </div>
               </div>
 
@@ -671,22 +677,25 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
 
         {/* Ingredients Rows */}
         <div className="space-y-2">
-          {filteredIngredients.map((ingredient) => (
-            <IngredientRow
-              key={ingredient.id}
-              ingredient={ingredient}
-              servingMultiplier={servingMultiplier}
-              isSelected={selectedIngredientIds.has(ingredient.id)}
-              onToggleSelect={() => handleToggleSelect(ingredient.id)}
-              onTogglePantry={handleTogglePantry}
-              onUpdateIngredient={handleUpdateIngredient}
-              onDeleteIngredient={handleDeleteIngredient}
-              onRequestSubstitute={onRequestSubstitute}
-              onOpenSwapModal={(ing) => setSwapIngredient(ing)}
-              isInCart={cartItemIds.has(ingredient.id)}
-              onToggleCartItem={(ing) => onToggleCartItem(ing, servingMultiplier)}
-            />
-          ))}
+          {filteredIngredients.map((ingredient) => {
+            const isPantryItem = isIngredientInPantry(ingredient, globalPantryItems);
+            return (
+              <IngredientRow
+                key={ingredient.id}
+                ingredient={{ ...ingredient, inPantry: isPantryItem }}
+                servingMultiplier={servingMultiplier}
+                isSelected={selectedIngredientIds.has(ingredient.id)}
+                onToggleSelect={() => handleToggleSelect(ingredient.id)}
+                onTogglePantry={handleTogglePantry}
+                onUpdateIngredient={handleUpdateIngredient}
+                onDeleteIngredient={handleDeleteIngredient}
+                onRequestSubstitute={onRequestSubstitute}
+                onOpenSwapModal={(ing) => setSwapIngredient(ing)}
+                isInCart={cartItemIds.has(ingredient.id)}
+                onToggleCartItem={(ing) => onToggleCartItem(ing, servingMultiplier)}
+              />
+            );
+          })}
         </div>
 
         {/* Bottom Recipe Add-To-Cart Banner */}
