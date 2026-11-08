@@ -14,6 +14,7 @@ import {
   ChevronRight,
   RotateCcw,
   Search,
+  Zap,
 } from 'lucide-react';
 import { Ingredient } from '../types';
 import {
@@ -108,16 +109,28 @@ export const WalmartCartDrawer: React.FC<WalmartCartDrawerProps> = ({
     (i) => i.itemId && /^\d+$/.test(i.itemId)
   );
 
-  // Walmart official Recipe / Bundle multi-item direct addToCart endpoint:
-  // https://www.walmart.com/sc/cart/addToCart?items=itemId1|qty1,itemId2|qty2
-  const walmartAddToCartUrl =
-    verifiedAutoAddItems.length > 0
-      ? `https://www.walmart.com/sc/cart/addToCart?items=${verifiedAutoAddItems
-          .map((i) => `${i.itemId}|${i.orderQuantity}`)
-          .join(',')}`
-      : cartItems.length > 0 && cartItems[0]?.walmartSearchUrl
-      ? cartItems[0].walmartSearchUrl
-      : 'https://www.walmart.com/cart';
+  // 1-Click Direct Walmart Add-To-Cart URL
+  // Directly loads items into user's cart via https://www.walmart.com/sc/cart/addToCart?items=...
+  const walmartAddToCartUrl = (() => {
+    if (verifiedAutoAddItems.length === 0) return 'https://www.walmart.com/cart';
+    const itemsParam = verifiedAutoAddItems
+      .map((item) => `${item.itemId}|${item.orderQuantity || 1}`)
+      .join(',');
+    return `https://www.walmart.com/sc/cart/addToCart?items=${itemsParam}`;
+  })();
+
+  // Direct authentic single product link (e.g. /ip/...)
+  const singleItemProductUrl = (() => {
+    if (cartItems.length === 0) return 'https://www.walmart.com/cart';
+    const first = cartItems[0];
+    if (first.walmartDirectAddUrl && first.walmartDirectAddUrl.includes('walmart.com')) {
+      return first.walmartDirectAddUrl;
+    }
+    if (first.itemId && /^\d+$/.test(first.itemId)) {
+      return `https://www.walmart.com/ip/${first.itemId}`;
+    }
+    return first.walmartSearchUrl || 'https://www.walmart.com/cart';
+  })();
 
   // Pick suggestion from verified catalog
   const handleSelectSuggestion = (prod: WalmartGroceryProduct) => {
@@ -236,8 +249,8 @@ export const WalmartCartDrawer: React.FC<WalmartCartDrawerProps> = ({
                 <h2 className="text-base font-bold text-slate-900 leading-tight">
                   Walmart Shopping Cart
                 </h2>
-                <span className="text-xs font-mono font-bold text-[#0071DC] bg-blue-50 border border-blue-200/60 px-1.5 py-0.2 rounded">
-                  {cartItems.length} items
+                <span className="text-xs font-mono font-bold text-[#0071DC] bg-blue-50 border border-blue-200/60 px-2 py-0.5 rounded">
+                  {totalItemsCount} {totalItemsCount === 1 ? 'unit' : 'units'}{cartItems.length > 1 ? ` (${cartItems.length} items)` : ''}
                 </span>
               </div>
               <p className="text-xs text-slate-500">
@@ -443,14 +456,14 @@ export const WalmartCartDrawer: React.FC<WalmartCartDrawerProps> = ({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <h4 className="text-xs font-bold text-emerald-950">
-                    Direct Auto-Add to Walmart Cart Ready
+                    Verified Walmart Items Ready ({totalItemsCount} Total Units)
                   </h4>
                   <span className="text-[10px] font-mono font-bold bg-emerald-200/80 text-emerald-900 px-1.5 py-0.2 rounded">
                     {verifiedAutoAddItems.length} of {cartItems.length} items direct
                   </span>
                 </div>
                 <p className="text-[11px] text-emerald-800/90 mt-0.5 leading-relaxed">
-                  Clicking <strong>&ldquo;Auto-Add Food Items Directly to Walmart Cart&rdquo;</strong> transfers your actual recipe ingredients into your Walmart cart at once with correct package quantities—no more leftover or misplaced items.
+                  Every item is pre-matched to authentic Walmart grocery items with accurate retail package counts.
                 </p>
               </div>
             </div>
@@ -472,7 +485,7 @@ export const WalmartCartDrawer: React.FC<WalmartCartDrawerProps> = ({
                             {recipeTitle}
                           </h3>
                           <div className="text-[11px] text-slate-500 font-mono">
-                            {items.length} verified grocery items · ${recipeTotal.toFixed(2)}
+                            {items.reduce((s, i) => s + i.orderQuantity, 0)} units{items.length > 1 ? ` (${items.length} items)` : ''} · ${recipeTotal.toFixed(2)}
                           </div>
                         </div>
 
@@ -560,7 +573,7 @@ export const WalmartCartDrawer: React.FC<WalmartCartDrawerProps> = ({
                             {/* Actions: View match and Remove item */}
                             <div className="flex items-center gap-1 shrink-0">
                               <a
-                                href={item.itemId && /^\d+$/.test(item.itemId) ? `https://www.walmart.com/ip/${item.itemId}` : item.walmartSearchUrl}
+                                href={item.walmartDirectAddUrl && item.walmartDirectAddUrl.includes('walmart.com') ? item.walmartDirectAddUrl : (item.itemId && /^\d+$/.test(item.itemId) ? `https://www.walmart.com/ip/${item.itemId}` : item.walmartSearchUrl)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -659,7 +672,7 @@ export const WalmartCartDrawer: React.FC<WalmartCartDrawerProps> = ({
 
                           <div className="flex items-center gap-1 shrink-0">
                             <a
-                              href={item.itemId && /^\d+$/.test(item.itemId) ? `https://www.walmart.com/ip/${item.itemId}` : item.walmartSearchUrl}
+                              href={item.walmartDirectAddUrl && item.walmartDirectAddUrl.includes('walmart.com') ? item.walmartDirectAddUrl : (item.itemId && /^\d+$/.test(item.itemId) ? `https://www.walmart.com/ip/${item.itemId}` : item.walmartSearchUrl)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -719,29 +732,51 @@ export const WalmartCartDrawer: React.FC<WalmartCartDrawerProps> = ({
               </button>
             </div>
 
-            {/* Main Single Action: Official Walmart Multi-Item AddToCart */}
-            <div className="space-y-1.5">
+            {/* Main Action: 1-Click Direct Add to Walmart Cart */}
+            <div className="space-y-2">
               <a
                 href={walmartAddToCartUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-[#0071DC] hover:bg-[#005bb5] active:scale-98 text-white font-bold rounded-xl shadow-md transition-all cursor-pointer text-sm"
-                title="Automatically add recipe ingredients directly to your Walmart cart"
+                title="1-Click: Automatically adds all verified items into your Walmart.com cart!"
               >
-                <ShoppingBag className="w-4 h-4" />
+                <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
                 <span>
-                  {verifiedAutoAddItems.length > 0
-                    ? `Auto-Add ${verifiedAutoAddItems.length} Food Items Directly to Walmart Cart`
-                    : `Proceed to Walmart Cart (${cartItems.length} Food Items)`}
+                  {cartItems.length === 1
+                    ? `⚡ 1-Click Add to Walmart Cart (${totalItemsCount} ${totalItemsCount === 1 ? 'Unit' : 'Units'})`
+                    : `⚡ 1-Click Add All ${totalItemsCount} Units to Walmart Cart`}
                 </span>
-                <ExternalLink className="w-4 h-4 ml-1" />
+                <ExternalLink className="w-4 h-4 ml-1 opacity-80" />
               </a>
 
-              <p className="text-[11px] text-center text-slate-500 font-medium">
-                {verifiedAutoAddItems.length > 0
-                  ? `⚡ Direct AddToCart: Transfers all ${verifiedAutoAddItems.length} recipe ingredients directly into your Walmart cart in 1 tab`
-                  : 'Opens your Walmart shopping cart'}
-              </p>
+              {cartItems.length === 1 && (
+                <div className="text-center pt-0.5">
+                  <a
+                    href={singleItemProductUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-slate-500 hover:text-[#0071DC] underline inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>View Product Page on Walmart.com</span>
+                    <ExternalLink className="w-3 h-3 opacity-60" />
+                  </a>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium px-1">
+                <span className="text-emerald-700 flex items-center gap-1">
+                  ✓ Verified Walmart grocery item
+                </span>
+                {cartItems.length > 1 && (
+                  <button
+                    onClick={handleCopyList}
+                    className="text-blue-600 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    {copied ? '✓ Copied List!' : 'Copy Order List'}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}

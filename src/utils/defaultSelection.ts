@@ -33,16 +33,22 @@ export const DEFAULT_SELECTION_SETTINGS: DefaultSelectionSettings = {
 export function isIngredientAHomeStaple(ingredient: Ingredient, homeStaples: string[]): boolean {
   const nameLower = ingredient.name.toLowerCase();
   const rawLower = (ingredient.rawText || '').toLowerCase();
-  const queryLower = (ingredient.walmartQuery || '').toLowerCase();
+  const category = (ingredient.category || '').toLowerCase();
+
+  // Frozen pizzas, ramen, and prepared entrees are never pantry staples
+  if (category.includes('frozen') || nameLower.includes('pizza') || nameLower.includes('ramen')) {
+    return false;
+  }
 
   return homeStaples.some((staple) => {
     const s = staple.toLowerCase().trim();
     if (!s) return false;
-    return (
-      nameLower.includes(s) ||
-      rawLower.includes(s) ||
-      queryLower.includes(s)
-    );
+    try {
+      const regex = new RegExp(`\\b${s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      return regex.test(nameLower) || regex.test(rawLower);
+    } catch {
+      return nameLower === s;
+    }
   });
 }
 
@@ -63,9 +69,9 @@ export function shouldSelectIngredientByDefault(
     return true;
   }
 
-  // Mode: Only fresh perishables & proteins
+  // Mode: Only fresh perishables & proteins (also include Frozen main foods like pizza so user is never stranded)
   if (settings.mode === 'perishables_only') {
-    return ['Produce', 'Meat & Seafood', 'Dairy & Eggs', 'Bakery'].includes(ingredient.category);
+    return ['Produce', 'Meat & Seafood', 'Dairy & Eggs', 'Bakery', 'Frozen'].includes(ingredient.category);
   }
 
   // Mode: Exclude home staples

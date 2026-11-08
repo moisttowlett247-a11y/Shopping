@@ -24,6 +24,7 @@ import {
 import { Recipe, Ingredient, DefaultSelectionSettings } from '../types';
 import { IngredientRow } from './IngredientRow';
 import { SwapWalmartProductModal } from './SwapWalmartProductModal';
+import { CartItem } from './WalmartCartDrawer';
 import { matchWalmartGroceryItem, calculateRetailPackageQuantity, WalmartGroceryProduct } from '../data/walmartGroceryCatalog';
 import { applyDefaultSelectionToRecipe } from '../utils/defaultSelection';
 import { isIngredientInPantry } from '../utils/pantry';
@@ -35,6 +36,7 @@ interface RecipeDetailProps {
   onAddAllToCart: (recipe: Recipe, selectedIngredientIds?: Set<string>, servingMultiplier?: number) => void;
   onRequestSubstitute: (ingredient: Ingredient) => void;
   cartItemIds: Set<string>;
+  cartItems?: CartItem[];
   onToggleCartItem: (ingredient: Ingredient, servingMultiplier?: number) => void;
   onOpenCart: () => void;
   defaultSelectionSettings?: DefaultSelectionSettings;
@@ -50,6 +52,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
   onAddAllToCart,
   onRequestSubstitute,
   cartItemIds,
+  cartItems = [],
   onToggleCartItem,
   onOpenCart,
   defaultSelectionSettings,
@@ -87,28 +90,38 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
 
   // Selection set of ingredient IDs to include when adding to cart
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<Set<string>>(() => {
-    if (defaultSelectionSettings) {
-      return applyDefaultSelectionToRecipe(recipe.ingredients, defaultSelectionSettings);
+    const isPantry = (i: Ingredient) => isIngredientInPantry(i, globalPantryItems);
+    const nonPantry = recipe.ingredients.filter((i) => !isPantry(i));
+    if (nonPantry.length > 0) {
+      if (defaultSelectionSettings) {
+        return applyDefaultSelectionToRecipe(nonPantry, defaultSelectionSettings);
+      }
+      return new Set(nonPantry.map((i) => i.id));
     }
-    return new Set(recipe.ingredients.filter((i) => !i.inPantry).map((i) => i.id));
+    // If all ingredients were flagged, default to selecting all so 1-item recipes (e.g. DiGiorno Pizza) work immediately!
+    return new Set(recipe.ingredients.map((i) => i.id));
   });
 
-  // Keep selection synchronized when recipe or default settings change
+  // Keep selection synchronized when recipe, pantry items, or default settings change
   useEffect(() => {
+    const isPantry = (i: Ingredient) => isIngredientInPantry(i, globalPantryItems);
+    const nonPantry = recipe.ingredients.filter((i) => !isPantry(i));
+    const targetBase = nonPantry.length > 0 ? nonPantry : recipe.ingredients;
+
     if (defaultSelectionSettings && defaultSelectionSettings.autoApplyOnOpen) {
-      setSelectedIngredientIds(applyDefaultSelectionToRecipe(recipe.ingredients, defaultSelectionSettings));
+      setSelectedIngredientIds(applyDefaultSelectionToRecipe(targetBase, defaultSelectionSettings));
     } else {
       setSelectedIngredientIds((prev) => {
         const next = new Set<string>();
         recipe.ingredients.forEach((ing) => {
-          if (!ing.inPantry && (prev.has(ing.id) || !prev.size)) {
+          if ((!isPantry(ing) || !nonPantry.length) && (prev.has(ing.id) || !prev.size)) {
             next.add(ing.id);
           }
         });
-        return next;
+        return next.size > 0 ? next : new Set(recipe.ingredients.map((i) => i.id));
       });
     }
-  }, [recipe.ingredients, defaultSelectionSettings]);
+  }, [recipe.ingredients, defaultSelectionSettings, globalPantryItems]);
 
   // Toggle selection for single ingredient
   const handleToggleSelect = (id: string) => {
@@ -123,10 +136,11 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
     });
   };
 
-  // Select all non-pantry ingredients
+  // Select all non-pantry ingredients (or all if all are pantry)
   const handleSelectAll = () => {
-    const allNonPantry = new Set(recipe.ingredients.filter((i) => !i.inPantry).map((i) => i.id));
-    setSelectedIngredientIds(allNonPantry);
+    const isPantry = (i: Ingredient) => isIngredientInPantry(i, globalPantryItems);
+    const nonPantry = recipe.ingredients.filter((i) => !isPantry(i)).map((i) => i.id);
+    setSelectedIngredientIds(new Set(nonPantry.length > 0 ? nonPantry : recipe.ingredients.map((i) => i.id)));
   };
 
   // Deselect all
@@ -252,9 +266,15 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
 
   // Calculate pricing breakdown with scaled retail packaging quantities
   const activeItemsToBuy = recipe.ingredients.filter(
-    (i) => !isIngredientInPantry(i, globalPantryItems) && selectedIngredientIds.has(i.id)
+    (i) => selectedIngredientIds.has(i.id)
   );
-  const pantryIngredients = recipe.ingredients.filter((i) => isIngredientInPantry(i, globalPantryItems));
+  const pantryIngredients = recipe.ingredients.filter(
+    (i) => isIngredientInPantry(i, globalPantryItems) && !selectedIngredientIds.has(i.id)
+  );
+  const activeUnitsToBuy = activeItemsToBuy.reduce(
+    (sum, i) => sum + calculateRetailPackageQuantity((i.amount || 1) * servingMultiplier, i.unit, i.packageSize, i.category),
+    0
+  );
   const totalEstimatedCost = activeItemsToBuy.reduce((sum, i) => {
     const scaledAmount = (i.amount || 1) * servingMultiplier;
     const pkgs = calculateRetailPackageQuantity(scaledAmount, i.unit, i.packageSize, i.category);
@@ -262,6 +282,51 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
   }, 0);
   const pantrySavings = pantryIngredients.reduce((sum, i) => sum + i.estimatedPrice, 0);
   const costPerServing = (totalEstimatedCost / servings).toFixed(2);
+  const cartTotalUnits = cartItems.length > 0
+    ? cartItems.reduce((sum, i) => sum + (i.orderQuantity || 1), 0)
+    : cartItemIds.size;
+
+  // Direct authentic Walmart product page for single-item recipes (e.g. DiGiorno Pizza)
+  const isSingleItemRecipe = activeItemsToBuy.length === 1;
+  const singleItemDirectUrl = (() => {
+    if (!isSingleItemRecipe) return null;
+    const first = activeItemsToBuy[0];
+    if (first.walmartDirectAddUrl && first.walmartDirectAddUrl.includes('walmart.com')) {
+      return first.walmartDirectAddUrl;
+    }
+    if (first.itemId && /^\d+$/.test(first.itemId)) {
+      return `https://www.walmart.com/ip/${first.itemId}`;
+    }
+    return first.walmartSearchUrl || 'https://www.walmart.com/cart';
+  })();
+
+  // Items with verified authentic Walmart item IDs for 1-click direct addToCart
+  const verifiedActiveItems = activeItemsToBuy.filter(
+    (i) => i.itemId && /^\d+$/.test(i.itemId)
+  );
+
+  // 1-Click Direct Walmart Add-To-Cart URL
+  // Formats items as itemId|qty (e.g. items=5328327386|2)
+  const directWalmartAddToCartUrl = (() => {
+    if (verifiedActiveItems.length === 0) {
+      if (activeItemsToBuy.length === 1 && singleItemDirectUrl) {
+        return singleItemDirectUrl;
+      }
+      return 'https://www.walmart.com/cart';
+    }
+    const itemsParam = verifiedActiveItems
+      .map((i) => {
+        const pkgs = calculateRetailPackageQuantity(
+          (i.amount || 1) * servingMultiplier,
+          i.unit,
+          i.packageSize,
+          i.category
+        );
+        return `${i.itemId}|${pkgs}`;
+      })
+      .join(',');
+    return `https://www.walmart.com/sc/cart/addToCart?items=${itemsParam}`;
+  })();
 
   // Filter ingredients by category
   const categories = Array.from(new Set(recipe.ingredients.map((i) => i.category)));
@@ -270,8 +335,12 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
       ? recipe.ingredients
       : recipe.ingredients.filter((i) => i.category === categoryFilter);
 
-  // Trigger adding entire recipe or selected items to internal cart (NO TABS)
+  // Trigger adding entire recipe or selected items to internal cart
   const handleAddSelectedToCart = () => {
+    onAddAllToCart(recipe, selectedIngredientIds, servingMultiplier);
+  };
+
+  const handleDirectWalmartAdd = () => {
     onAddAllToCart(recipe, selectedIngredientIds, servingMultiplier);
   };
 
@@ -288,27 +357,43 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
         </button>
 
         <div className="flex items-center gap-2.5 flex-wrap">
-          {/* ⚡ 1-Click Auto-Add Entire Recipe / Selected Items into Cart Drawer - ZERO TABS */}
-          <button
-            onClick={handleAddSelectedToCart}
-            disabled={activeItemsToBuy.length === 0}
+          {/* Main Action: 1-Click Direct Add to Walmart Cart */}
+          <a
+            href={directWalmartAddToCartUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={handleDirectWalmartAdd}
             className={`inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold text-white rounded-xl shadow-md transition-all cursor-pointer whitespace-nowrap active:scale-98 ${
               activeItemsToBuy.length > 0
                 ? 'bg-[#0071DC] hover:bg-[#005bb5]'
-                : 'bg-slate-400 cursor-not-allowed opacity-60'
+                : 'bg-slate-400 pointer-events-none opacity-60'
             }`}
-            title="Add all selected ingredients directly into your Walmart grocery cart drawer (no external tabs opened)"
+            title="Automatically adds items directly into your Walmart.com shopping cart!"
           >
             <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
-            <span>⚡ Auto-Add to Cart ({activeItemsToBuy.length} items)</span>
-          </button>
+            <span>⚡ 1-Click Add to Walmart Cart ({activeUnitsToBuy} {activeUnitsToBuy === 1 ? 'unit' : 'units'} · ${totalEstimatedCost.toFixed(2)})</span>
+            <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+          </a>
+
+          {isSingleItemRecipe && singleItemDirectUrl && (
+            <a
+              href={singleItemDirectUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:text-[#0071DC] bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer whitespace-nowrap"
+              title="View product specifications and reviews on Walmart.com"
+            >
+              <span>Product Page</span>
+              <ExternalLink className="w-3 h-3 opacity-60" />
+            </a>
+          )}
 
           <button
             onClick={onOpenCart}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer whitespace-nowrap"
           >
             <ShoppingBag className="w-3.5 h-3.5 text-slate-600" />
-            <span>Open Cart ({cartItemIds.size})</span>
+            <span>Open Cart ({cartTotalUnits})</span>
           </button>
         </div>
       </div>
@@ -414,7 +499,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
             <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/90 rounded-xl flex flex-wrap items-center justify-between gap-4">
               <div>
                 <div className="text-xs text-blue-900 font-medium">
-                  Walmart Order Total ({activeItemsToBuy.length} selected ingredients)
+                  Walmart Order Total ({activeUnitsToBuy} {activeUnitsToBuy === 1 ? 'unit' : 'units'}{activeItemsToBuy.length > 1 ? ` · ${activeItemsToBuy.length} items` : ''})
                 </div>
                 <div className="text-2xl font-bold font-mono text-blue-950 tabular-nums">
                   ${totalEstimatedCost.toFixed(2)}
@@ -450,7 +535,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
                   title="Auto-adds all selected ingredients to your Walmart cart without opening new tabs"
                 >
                   <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
-                  <span>⚡ Auto-Add to Cart ({activeItemsToBuy.length})</span>
+                  <span>⚡ Auto-Add to Cart ({activeItemsToBuy.reduce((sum, i) => sum + calculateRetailPackageQuantity((i.amount || 1) * servingMultiplier, i.unit, i.packageSize, i.category), 0)} units)</span>
                 </button>
               </div>
             </div>
@@ -483,7 +568,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-bold text-slate-900">
-                Ingredients & Walmart Product Matches ({recipe.ingredients.length})
+                Ingredients & Walmart Product Matches ({recipe.ingredients.reduce((sum, i) => sum + calculateRetailPackageQuantity((i.amount || 1) * servingMultiplier, i.unit, i.packageSize, i.category), 0)} units{recipe.ingredients.length > 1 ? ` · ${recipe.ingredients.length} items` : ''})
               </h2>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -679,6 +764,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
         <div className="space-y-2">
           {filteredIngredients.map((ingredient) => {
             const isPantryItem = isIngredientInPantry(ingredient, globalPantryItems);
+            const cartItem = cartItems?.find((c) => c.id === ingredient.id);
             return (
               <IngredientRow
                 key={ingredient.id}
@@ -692,6 +778,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
                 onRequestSubstitute={onRequestSubstitute}
                 onOpenSwapModal={(ing) => setSwapIngredient(ing)}
                 isInCart={cartItemIds.has(ingredient.id)}
+                cartItemQuantity={cartItem?.orderQuantity}
                 onToggleCartItem={(ing) => onToggleCartItem(ing, servingMultiplier)}
               />
             );
@@ -705,22 +792,46 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
               Ready to shop this recipe?
             </div>
             <div className="text-xs text-slate-300">
-              {activeItemsToBuy.length} of {recipe.ingredients.length} ingredients selected (${totalEstimatedCost.toFixed(2)})
+              {activeUnitsToBuy} {activeUnitsToBuy === 1 ? 'unit' : 'units'} selected ({activeItemsToBuy.length} of {recipe.ingredients.length} {recipe.ingredients.length === 1 ? 'food item' : 'food items'}) · ${totalEstimatedCost.toFixed(2)}
             </div>
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <button
-              onClick={handleAddSelectedToCart}
-              disabled={activeItemsToBuy.length === 0}
+          <div className="flex items-center gap-2.5 w-full sm:w-auto flex-wrap sm:flex-nowrap">
+            <a
+              href={directWalmartAddToCartUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={handleDirectWalmartAdd}
               className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-bold text-white rounded-xl shadow-md transition-all cursor-pointer whitespace-nowrap active:scale-98 ${
                 activeItemsToBuy.length > 0
                   ? 'bg-[#0071DC] hover:bg-[#005bb5]'
-                  : 'bg-slate-700 cursor-not-allowed opacity-60'
+                  : 'bg-slate-700 pointer-events-none opacity-60'
               }`}
+              title="1-Click: Automatically adds all selected items directly to your Walmart.com cart!"
             >
               <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
-              <span>⚡ Auto-Add All to Cart ({activeItemsToBuy.length} items)</span>
+              <span>⚡ 1-Click Add to Walmart Cart ({activeUnitsToBuy} {activeUnitsToBuy === 1 ? 'unit' : 'units'})</span>
+              <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+            </a>
+
+            {isSingleItemRecipe && singleItemDirectUrl && (
+              <a
+                href={singleItemDirectUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition-all cursor-pointer whitespace-nowrap"
+              >
+                <span>Product Page</span>
+                <ExternalLink className="w-3 h-3 opacity-70" />
+              </a>
+            )}
+
+            <button
+              onClick={onOpenCart}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 text-xs font-semibold text-slate-200 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition-all cursor-pointer whitespace-nowrap"
+            >
+              <ShoppingBag className="w-3.5 h-3.5" />
+              <span>Review in Drawer</span>
             </button>
           </div>
         </div>

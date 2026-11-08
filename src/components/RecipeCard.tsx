@@ -31,7 +31,8 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
     ? applyDefaultSelectionToRecipe(recipe.ingredients, defaultSelectionSettings)
     : new Set(recipe.ingredients.filter((i) => !isIngredientInPantry(i, pantryItems)).map((i) => i.id));
 
-  const itemsToAdd = recipe.ingredients.filter((i) => !isIngredientInPantry(i, pantryItems) && effectiveSelection.has(i.id));
+  const rawItemsToAdd = recipe.ingredients.filter((i) => !isIngredientInPantry(i, pantryItems) && effectiveSelection.has(i.id));
+  const itemsToAdd = rawItemsToAdd.length > 0 ? rawItemsToAdd : recipe.ingredients;
 
   const estimatedTotal = itemsToAdd.reduce((acc, curr) => {
     const pkgs = calculateRetailPackageQuantity(curr.amount || 1, curr.unit, curr.packageSize, curr.category);
@@ -160,7 +161,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
           ) : (
             <>
               <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
-              <span>⚡ Auto-Add ({itemsToAdd.length})</span>
+              <span>⚡ Auto-Add ({itemsToAdd.reduce((acc, curr) => acc + calculateRetailPackageQuantity(curr.amount || 1, curr.unit, curr.packageSize, curr.category), 0)} units)</span>
             </>
           )}
         </button>

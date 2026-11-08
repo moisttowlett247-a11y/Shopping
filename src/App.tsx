@@ -35,16 +35,39 @@ import { isIngredientInPantry } from './utils/pantry';
 // Storage version key to guarantee old corrupt/hallucinated SKU items or stale quantities
 // are purged from the user's browser localStorage on first load!
 const STORAGE_VERSION_KEY = 'cartcraft_storage_version';
-const CURRENT_STORAGE_VERSION = 'v13_bagged_rotisserie_and_default_selection';
+const CURRENT_STORAGE_VERSION = 'v22_digiorno_item_5328327386';
 
 // Helper to ensure Walmart URLs are 100% matched against our verified Walmart Grocery Catalog
 // CRITICAL: NEVER overwrite the recipe's authentic food name!
 function sanitizeIngredientUrls<T extends Ingredient>(ing: T): T {
-  const authenticName = (ing.name || ing.rawText || 'Food item').trim();
+  let authenticName = (ing.name || ing.rawText || 'Food item').trim();
   const match = matchWalmartGroceryItem(authenticName, ing.category);
-  const validItemId = (ing.itemId && /^\d+$/.test(ing.itemId))
+  let validItemId = (ing.itemId && /^\d+$/.test(ing.itemId))
     ? ing.itemId
     : (match.itemId && /^\d+$/.test(match.itemId) ? match.itemId : undefined);
+
+  // Auto-upgrade DiGiorno pizza to the live authentic Walmart item ID 5328327386
+  if (
+    validItemId === '10290804' ||
+    authenticName.toLowerCase().includes('digiorno') ||
+    (ing.walmartDirectAddUrl && ing.walmartDirectAddUrl.includes('10290804')) ||
+    (ing.walmartSearchUrl && ing.walmartSearchUrl.includes('10290804'))
+  ) {
+    validItemId = '5328327386';
+    authenticName = 'DiGiorno Frozen Pizza Rising Crust Ultimate Pepperoni with Cheese';
+    const livePizzaUrl = 'https://www.walmart.com/ip/DiGiorno-Frozen-Pizza-Rising-Crust-Ultimate-Pepperoni-with-Cheese-24-7-oz-Frozen/5328327386?classType=REGULAR&athbdg=L1102&from=/search';
+    return {
+      ...ing,
+      itemId: '5328327386',
+      name: authenticName,
+      category: 'Frozen',
+      walmartQuery: 'DiGiorno Frozen Pizza Rising Crust Ultimate Pepperoni with Cheese 24.7 oz Frozen',
+      walmartSearchUrl: livePizzaUrl,
+      walmartDirectAddUrl: livePizzaUrl,
+      estimatedPrice: ing.estimatedPrice && ing.estimatedPrice > 0 ? ing.estimatedPrice : 5.98,
+      packageSize: '24.7 oz box',
+    };
+  }
 
   const directUrl = (ing.walmartDirectAddUrl && ing.walmartDirectAddUrl.trim() !== '' && ing.walmartDirectAddUrl.includes('walmart.com'))
     ? ing.walmartDirectAddUrl
@@ -77,6 +100,21 @@ export default function App() {
       if (savedVersion !== CURRENT_STORAGE_VERSION) {
         localStorage.removeItem('cartcraft_recipes');
         localStorage.removeItem('cartcraft_cart');
+        // Clean any accidental pizza / ramen items from pantry storage
+        const savedPantry = localStorage.getItem('cartcraft_pantry_items');
+        if (savedPantry) {
+          try {
+            const parsed: string[] = JSON.parse(savedPantry);
+            const cleaned = parsed.filter((p) => {
+              const lower = p.toLowerCase();
+              return !lower.includes('pizza') && !lower.includes('ramen');
+            });
+            localStorage.setItem('cartcraft_pantry_items', JSON.stringify(cleaned));
+            setPantryItems(new Set(cleaned));
+          } catch {
+            localStorage.removeItem('cartcraft_pantry_items');
+          }
+        }
         localStorage.setItem(STORAGE_VERSION_KEY, CURRENT_STORAGE_VERSION);
       }
     } catch (e) {
@@ -269,17 +307,42 @@ export default function App() {
     selectedIngredientIds?: Set<string>,
     servingMultiplier: number = 1
   ) => {
-    const effectiveSelection = selectedIngredientIds || applyDefaultSelectionToRecipe(recipe.ingredients, defaultSelectionSettings);
-    const itemsToAdd = recipe.ingredients.filter((i) => {
-      if (isIngredientInPantry(i, pantryItems)) return false;
-      if (!effectiveSelection.has(i.id)) return false;
-      return true;
-    });
+    let itemsToAdd: Ingredient[];
+
+    if (selectedIngredientIds && selectedIngredientIds.size > 0) {
+      // User explicitly selected ingredients in RecipeDetail view - respect their choice!
+      itemsToAdd = recipe.ingredients.filter((i) => selectedIngredientIds.has(i.id));
+    } else {
+      // Auto-add from catalog card or default rule: skip items already in pantry
+      const effectiveSelection = applyDefaultSelectionToRecipe(recipe.ingredients, defaultSelectionSettings);
+      itemsToAdd = recipe.ingredients.filter((i) => {
+        if (isIngredientInPantry(i, pantryItems)) return false;
+        if (!effectiveSelection.has(i.id)) return false;
+        return true;
+      });
+
+      // Safety: If all items were filtered out (e.g. 1-item pre-made recipes like Pizza or Ramen),
+      // add all recipe items so the user's action always succeeds!
+      if (itemsToAdd.length === 0 && recipe.ingredients.length > 0) {
+        itemsToAdd = recipe.ingredients;
+      }
+    }
 
     if (itemsToAdd.length === 0) {
-      showToast(`No new ingredients to add for "${recipe.title}" (all are in pantry or excluded).`);
+      showToast(`No ingredients selected to add for "${recipe.title}".`);
       return;
     }
+
+    const totalUnitsAdded = itemsToAdd.reduce((sum, ing) => {
+      const clean = sanitizeIngredientUrls(ing);
+      const scaledAmount = (clean.amount || 1) * servingMultiplier;
+      return sum + calculateRetailPackageQuantity(
+        scaledAmount,
+        clean.unit,
+        clean.packageSize,
+        clean.category
+      );
+    }, 0);
 
     setCartItems((prev) => {
       const existingMap = new Map<string, CartItem>();
@@ -313,7 +376,7 @@ export default function App() {
       return Array.from(existingMap.values());
     });
 
-    showToast(`✓ Auto-added ${itemsToAdd.length} verified grocery items from "${recipe.title}"!`);
+    showToast(`✓ Auto-added ${totalUnitsAdded} ${totalUnitsAdded === 1 ? 'unit' : 'units'} of "${recipe.title}" to your Walmart Cart!`);
     setIsCartOpen(true);
   };
 
@@ -544,7 +607,7 @@ export default function App() {
 
       {/* Universal Top Bar */}
       <Header
-        cartItemCount={cartItems.length}
+        cartItemCount={cartItems.reduce((sum, item) => sum + (item.orderQuantity || 1), 0)}
         pantryCount={pantryItems.size}
         onOpenCart={() => setIsCartOpen(true)}
         onOpenRecipeInput={() => {
@@ -571,6 +634,7 @@ export default function App() {
             onAddAllToCart={handleAddAllToCart}
             onRequestSubstitute={(ing) => setSubstituteIngredient(ing)}
             cartItemIds={cartItemIds}
+            cartItems={cartItems}
             onToggleCartItem={handleToggleCartItem}
             onOpenCart={() => setIsCartOpen(true)}
             defaultSelectionSettings={defaultSelectionSettings}

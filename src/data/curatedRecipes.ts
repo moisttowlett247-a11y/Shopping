@@ -665,5 +665,185 @@ export const INITIAL_RECIPES: Recipe[] = [
         inPantry: false
       }
     ]
+  },
+  {
+    id: 'recipe-digiorno-pizza',
+    title: 'DiGiorno Pepperoni Frozen Pizza Night',
+    description: 'Crispy, oven-baked DiGiorno Rising Crust Pepperoni Frozen Pizzas for a quick and satisfying pizza night.',
+    prepTime: '2 mins',
+    cookTime: '20 mins',
+    servings: 4,
+    baseServings: 4,
+    cuisine: 'American',
+    tags: ['Pizza', 'Frozen', 'Quick & Easy'],
+    image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80',
+    instructions: [
+      'Preheat oven to 400°F (204°C).',
+      'Remove DiGiorno Rising Crust Pepperoni Pizzas from plastic wrap and cardboard disc.',
+      'Place pizzas directly on center oven rack (staggered if baking both at once).',
+      'Bake for 18 to 21 minutes until cheese is melted and crust edges are golden brown.',
+      'Let cool 5 minutes before slicing into triangles and serving hot.'
+    ],
+    ingredients: [
+      {
+        id: 'ing-pizz-1',
+        itemId: '5328327386',
+        name: 'DiGiorno Frozen Pizza Rising Crust Ultimate Pepperoni with Cheese',
+        rawText: '2 DiGiorno Frozen Pizzas Rising Crust Ultimate Pepperoni with Cheese',
+        amount: 2,
+        unit: 'pizzas',
+        category: 'Frozen',
+        walmartQuery: 'DiGiorno Frozen Pizza Rising Crust Ultimate Pepperoni with Cheese 24.7 oz Frozen',
+        walmartSearchUrl: 'https://www.walmart.com/ip/DiGiorno-Frozen-Pizza-Rising-Crust-Ultimate-Pepperoni-with-Cheese-24-7-oz-Frozen/5328327386?classType=REGULAR&athbdg=L1102&from=/search',
+        walmartDirectAddUrl: 'https://www.walmart.com/ip/DiGiorno-Frozen-Pizza-Rising-Crust-Ultimate-Pepperoni-with-Cheese-24-7-oz-Frozen/5328327386?classType=REGULAR&athbdg=L1102&from=/search',
+        brandTier: 'name_brand',
+        estimatedPrice: 5.98,
+        packageSize: '24.7 oz box',
+        isPantryStaple: false,
+        inPantry: false
+      }
+    ]
+  },
+  {
+    id: 'recipe-fried-egg-sandwich',
+    title: 'Classic Fried Egg Sandwiches',
+    description: 'Golden toasted white sandwich bread with pan-fried eggs cooked in melted butter, seasoned with simple salt and black pepper.',
+    prepTime: '5 mins',
+    cookTime: '5 mins',
+    servings: 2,
+    baseServings: 2,
+    cuisine: 'American',
+    tags: ['Breakfast', 'Quick & Easy', 'Comfort Food'],
+    image: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=800&q=80',
+    instructions: [
+      'Melt 2 tbsp unsalted butter in a non-stick skillet over medium-low heat.',
+      'Crack 4 eggs into the pan and season with salt and ground black pepper to taste.',
+      'Fry for 2-3 minutes until whites are set and yolks reach desired firmness.',
+      'Toast 4 slices of Great Value white sandwich bread until lightly golden.',
+      'Assemble fried eggs between toasted bread slices and serve warm.'
+    ],
+    ingredients: [
+      {
+        id: 'ing-fes-1',
+        itemId: '10315752',
+        name: 'Great Value White Sandwich Bread',
+        rawText: '4 slices white sandwich bread',
+        amount: 4,
+        unit: 'slices',
+        category: 'Bakery',
+        walmartQuery: 'Great Value White Sandwich Bread 20 oz Loaf',
+        walmartSearchUrl: 'https://www.walmart.com/ip/Great-Value-White-Sandwich-Bread-20-oz-Loaf/10315752?classType=REGULAR&athbdg=L1102&from=/search',
+        walmartDirectAddUrl: 'https://www.walmart.com/ip/Great-Value-White-Sandwich-Bread-20-oz-Loaf/10315752?classType=REGULAR&athbdg=L1102&from=/search',
+        brandTier: 'great_value',
+        estimatedPrice: 1.42,
+        packageSize: '20 oz loaf',
+        isPantryStaple: false,
+        inPantry: false
+      },
+      {
+        id: 'ing-fes-2',
+        itemId: '10315054',
+        name: 'Great Value Sweet Cream Unsalted Butter',
+        rawText: '2 tbsp unsalted butter',
+        amount: 2,
+        unit: 'tbsp',
+        category: 'Dairy & Eggs',
+        walmartQuery: 'Great Value Sweet Cream Unsalted Butter 16 oz Box 4 Sticks',
+        walmartSearchUrl: 'https://www.walmart.com/ip/Great-Value-Sweet-Cream-Unsalted-Butter-16-oz-Box-4-Sticks-Refrigerated/10315054?classType=REGULAR&athbdg=L1200&from=/search',
+        walmartDirectAddUrl: 'https://www.walmart.com/ip/Great-Value-Sweet-Cream-Unsalted-Butter-16-oz-Box-4-Sticks-Refrigerated/10315054?classType=REGULAR&athbdg=L1200&from=/search',
+        brandTier: 'great_value',
+        estimatedPrice: 3.98,
+        packageSize: '16 oz (4 sticks)',
+        isPantryStaple: true,
+        inPantry: false
+      },
+      {
+        id: 'ing-fes-3',
+        itemId: '172844767',
+        name: 'Great Value Large White Eggs (18 Count)',
+        rawText: '4 large white eggs',
+        amount: 4,
+        unit: 'eggs',
+        category: 'Dairy & Eggs',
+        walmartQuery: 'Great Value Large White Eggs 18 Count',
+        walmartSearchUrl: 'https://www.walmart.com/ip/Great-Value-Large-White-Eggs-18-Count/172844767?classType=REGULAR&athbdg=L1102&from=/search',
+        walmartDirectAddUrl: 'https://www.walmart.com/ip/Great-Value-Large-White-Eggs-18-Count/172844767?classType=REGULAR&athbdg=L1102&from=/search',
+        brandTier: 'great_value',
+        estimatedPrice: 3.12,
+        packageSize: '18 count carton',
+        isPantryStaple: false,
+        inPantry: false
+      },
+      {
+        id: 'ing-fes-4',
+        itemId: '10448936',
+        name: 'Morton Iodized Salt',
+        rawText: '0.25 tsp iodized salt',
+        amount: 0.25,
+        unit: 'tsp',
+        category: 'Spices & Seasonings',
+        walmartQuery: 'Morton Iodized Salt 26 oz',
+        walmartSearchUrl: 'https://www.walmart.com/ip/Morton-Iodized-Salt-26-oz/10448936?classType=REGULAR&athbdg=L1102&from=/search',
+        walmartDirectAddUrl: 'https://www.walmart.com/ip/Morton-Iodized-Salt-26-oz/10448936?classType=REGULAR&athbdg=L1102&from=/search',
+        brandTier: 'name_brand',
+        estimatedPrice: 1.18,
+        packageSize: '26 oz round container',
+        isPantryStaple: true,
+        inPantry: false
+      },
+      {
+        id: 'ing-fes-5',
+        itemId: '44662573',
+        name: 'Great Value Pure Ground Black Pepper',
+        rawText: '0.25 tsp ground black pepper',
+        amount: 0.25,
+        unit: 'tsp',
+        category: 'Spices & Seasonings',
+        walmartQuery: 'Great Value Pure Ground Black Pepper 3 oz',
+        walmartSearchUrl: 'https://www.walmart.com/ip/Great-Value-Pure-Ground-Black-Pepper-3-oz/44662573?classType=REGULAR&athbdg=L1102&from=/search',
+        walmartDirectAddUrl: 'https://www.walmart.com/ip/Great-Value-Pure-Ground-Black-Pepper-3-oz/44662573?classType=REGULAR&athbdg=L1102&from=/search',
+        brandTier: 'great_value',
+        estimatedPrice: 2.14,
+        packageSize: '3 oz bottle',
+        isPantryStaple: true,
+        inPantry: false
+      }
+    ]
+  },
+  {
+    id: 'recipe-maruchan-ramen',
+    title: 'Maruchan Chicken Flavor Ramen Noodle Soup',
+    description: 'Quick, warm, and comforting chicken flavor Maruchan ramen noodle soup.',
+    prepTime: '1 min',
+    cookTime: '3 mins',
+    servings: 2,
+    baseServings: 2,
+    cuisine: 'Asian',
+    tags: ['Ramen', 'Quick & Easy', 'Budget Friendly'],
+    image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=800&q=80',
+    instructions: [
+      'Bring 2 cups of water to a rolling boil in a small saucepan.',
+      'Add Maruchan ramen noodles and cook for 3 minutes, stirring occasionally.',
+      'Remove from heat, stir in the flavor packet seasoning until dissolved, and serve hot.'
+    ],
+    ingredients: [
+      {
+        id: 'ing-mram-1',
+        itemId: '10450904',
+        name: 'Maruchan Chicken Flavor Ramen Noodle Soup (12 Pack)',
+        rawText: '1 pack Maruchan Chicken Flavor Ramen Noodle Soup',
+        amount: 1,
+        unit: 'pack',
+        category: 'Pantry & Dry Goods',
+        walmartQuery: 'Maruchan Chicken Flavor Ramen Noodle Soup 12 Pack',
+        walmartSearchUrl: 'https://www.walmart.com/ip/Maruchan-Ramen-Chicken-Flavor-Noodle-Soup-3-oz-12-Count/10450904?classType=REGULAR&from=/search',
+        walmartDirectAddUrl: 'https://www.walmart.com/ip/Maruchan-Ramen-Chicken-Flavor-Noodle-Soup-3-oz-12-Count/10450904?classType=REGULAR&from=/search',
+        brandTier: 'name_brand',
+        estimatedPrice: 3.68,
+        packageSize: '12 pack (3 oz each)',
+        isPantryStaple: false,
+        inPantry: false
+      }
+    ]
   }
 ];

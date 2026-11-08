@@ -14,6 +14,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Sparkle,
+  Zap,
 } from 'lucide-react';
 import {
   USER_FAVORITE_ESSENTIALS,

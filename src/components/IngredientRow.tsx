@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ExternalLink, Sparkles, Edit2, Trash2, Check, ShoppingBag, CheckSquare, Square, Store } from 'lucide-react';
+import { ExternalLink, Sparkles, Edit2, Trash2, Check, ShoppingBag, CheckSquare, Square, Store, Zap } from 'lucide-react';
 import { Ingredient } from '../types';
 import { calculateRetailPackageQuantity } from '../data/walmartGroceryCatalog';
 
@@ -14,6 +14,7 @@ interface IngredientRowProps {
   onRequestSubstitute: (ingredient: Ingredient) => void;
   onOpenSwapModal?: (ingredient: Ingredient) => void;
   isInCart: boolean;
+  cartItemQuantity?: number;
   onToggleCartItem: (ingredient: Ingredient) => void;
 }
 
@@ -28,6 +29,7 @@ export const IngredientRow: React.FC<IngredientRowProps> = ({
   onRequestSubstitute,
   onOpenSwapModal,
   isInCart,
+  cartItemQuantity,
   onToggleCartItem,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -270,31 +272,36 @@ export const IngredientRow: React.FC<IngredientRowProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5">
-            {/* Primary Action: Direct In-App Cart Addition - NO TABS OPENED */}
-            {!ingredient.inPantry && (
-              <button
-                type="button"
-                onClick={() => onToggleCartItem(ingredient)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap shadow-2xs ${
-                  isInCart
-                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                    : 'bg-[#0071DC] hover:bg-[#005bb5] active:scale-98 text-white'
-                }`}
-                title={isInCart ? 'Item is in cart. Click to remove.' : 'Add this ingredient to your cart'}
-              >
-                {isInCart ? (
-                  <>
-                    <Check className="w-3.5 h-3.5" />
-                    <span>In Cart</span>
-                  </>
-                ) : (
-                  <>
-                    <ShoppingBag className="w-3.5 h-3.5" />
-                    <span>+ Add to Cart</span>
-                  </>
-                )}
-              </button>
-            )}
+            {/* Primary Action: Direct In-App Cart Addition */}
+            <button
+              type="button"
+              onClick={() => onToggleCartItem(ingredient)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap shadow-2xs ${
+                isInCart
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                  : ingredient.inPantry
+                  ? 'bg-slate-700 hover:bg-slate-800 text-white'
+                  : 'bg-[#0071DC] hover:bg-[#005bb5] active:scale-98 text-white'
+              }`}
+              title={isInCart ? 'Item is in cart. Click to remove.' : ingredient.inPantry ? 'In pantry. Click to add to cart anyway.' : 'Add this ingredient to your cart'}
+            >
+              {isInCart ? (
+                <>
+                  <Check className="w-3.5 h-3.5" />
+                  <span>In Cart ({cartItemQuantity || neededRetailUnits})</span>
+                </>
+              ) : ingredient.inPantry ? (
+                <>
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                  <span>+ Add {neededRetailUnits > 1 ? `${neededRetailUnits} Anyway` : 'Anyway'}</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                  <span>+ Add {neededRetailUnits > 1 ? `${neededRetailUnits} to Cart` : 'to Cart'}</span>
+                </>
+              )}
+            </button>
 
             {/* Swap with verified item from Walmart catalog */}
             {onOpenSwapModal && (
@@ -310,7 +317,7 @@ export const IngredientRow: React.FC<IngredientRowProps> = ({
 
             {/* Subtle Walmart.com listing link for preview */}
             <a
-              href={ingredient.walmartSearchUrl}
+              href={ingredient.walmartDirectAddUrl && ingredient.walmartDirectAddUrl.includes('walmart.com') ? ingredient.walmartDirectAddUrl : ingredient.walmartSearchUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="p-1.5 text-slate-400 hover:text-[#0071DC] hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"

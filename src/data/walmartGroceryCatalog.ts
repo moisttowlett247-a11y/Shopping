@@ -508,15 +508,15 @@ export const USER_FAVORITE_ESSENTIALS: WalmartGroceryProduct[] = [
   {
     id: 'wm-fav-digiorno-pizza',
     itemId: '5328327386',
-    name: 'DiGiorno Rising Crust Ultimate Pepperoni Frozen Pizza',
-    walmartQuery: 'DiGiorno Frozen Pizza Rising Crust Ultimate Pepperoni with Cheese 24.7 oz',
+    name: 'DiGiorno Frozen Pizza Rising Crust Ultimate Pepperoni with Cheese',
+    walmartQuery: 'DiGiorno Frozen Pizza Rising Crust Ultimate Pepperoni with Cheese 24.7 oz Frozen',
     walmartSearchUrl: 'https://www.walmart.com/ip/DiGiorno-Frozen-Pizza-Rising-Crust-Ultimate-Pepperoni-with-Cheese-24-7-oz-Frozen/5328327386?classType=REGULAR&athbdg=L1102&from=/search',
     category: 'Frozen',
     brand: 'DiGiorno',
-    estimatedPrice: 7.48,
-    packageSize: '24.7 oz frozen box',
+    estimatedPrice: 5.98,
+    packageSize: '24.7 oz box',
     isPantryStaple: false,
-    keywords: ['frozen pizza', 'digiorno pizza', 'pepperoni pizza', 'rising crust pizza', 'pizza', 'digiorno'],
+    keywords: ['frozen pizza', 'digiorno pizza', 'pepperoni pizza', 'rising crust pizza', 'pizza', 'digiorno', 'ultimate pepperoni'],
   },
   {
     id: 'wm-fav-maruchan-ramen',
@@ -907,6 +907,19 @@ export const USER_FAVORITE_ESSENTIALS: WalmartGroceryProduct[] = [
     packageSize: '24 oz bottle',
     isPantryStaple: true,
     keywords: ['ketchup', 'tomato ketchup', 'great value ketchup', 'condiment'],
+  },
+  {
+    id: 'wm-fav-wolf-brand-chili',
+    itemId: '10294770',
+    name: 'Wolf Brand Chili With Beans (15 oz Can)',
+    walmartQuery: 'Wolf Brand Chili With Beans 15 oz Can',
+    walmartSearchUrl: 'https://www.walmart.com/ip/WOLF-BRAND-Chili-With-Beans-15-oz-Can/10294770?classType=VARIANT&from=/search',
+    category: 'Pantry & Dry Goods',
+    brand: 'Wolf Brand',
+    estimatedPrice: 2.28,
+    packageSize: '15 oz can',
+    isPantryStaple: false,
+    keywords: ['wolf brand chili', 'wolf brand chili with beans', 'chili with beans', 'canned chili', 'chili', 'wolf chili', 'chili in a can'],
   },
 ];
 
@@ -2658,6 +2671,10 @@ export function calculateRetailPackageQuantity(
       'packages',
       'bunch',
       'bunches',
+      'pizza',
+      'pizzas',
+      'pie',
+      'pies',
     ].includes(cleanUnit)
   ) {
     return Math.max(1, Math.ceil(amount));
