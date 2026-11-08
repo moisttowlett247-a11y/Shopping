@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { X, Sparkles, FileText, Plus, Loader2, ArrowRight } from 'lucide-react';
+import { X, Sparkles, FileText, Plus, Loader2, ArrowRight, Globe, ExternalLink, Check, Image as ImageIcon } from 'lucide-react';
 import { Recipe, Ingredient } from '../types';
-import { parseRecipeText, generateAiRecipe } from '../services/api';
+import { parseRecipeText, generateAiRecipe, scrapeRecipeFromUrl } from '../services/api';
 import { matchWalmartGroceryItem } from '../data/walmartGroceryCatalog';
 import { parseIngredientLine } from '../utils/ingredientParser';
 import { heroImg } from '../assets/images';
@@ -10,18 +10,22 @@ interface RecipeInputModalProps {
   isOpen: boolean;
   onClose: () => void;
   onRecipeCreated: (recipe: Recipe) => void;
-  initialTab?: 'paste' | 'manual' | 'ai';
+  initialTab?: 'url' | 'paste' | 'manual' | 'ai';
 }
 
 export const RecipeInputModal: React.FC<RecipeInputModalProps> = ({
   isOpen,
   onClose,
   onRecipeCreated,
-  initialTab = 'paste',
+  initialTab = 'url',
 }) => {
-  const [activeTab, setActiveTab] = useState<'paste' | 'manual' | 'ai'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'url' | 'paste' | 'manual' | 'ai'>(initialTab);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Tab 0: Website / URL Scraper State
+  const [urlInput, setUrlInput] = useState('');
+  const [scrapedPreview, setScrapedPreview] = useState<Recipe | null>(null);
 
   // Tab 1: Paste Text State
   const [pasteTitle, setPasteTitle] = useState('');
@@ -46,6 +50,32 @@ export const RecipeInputModal: React.FC<RecipeInputModalProps> = ({
   const [manualIngredientInput, setManualIngredientInput] = useState('');
 
   if (!isOpen) return null;
+
+  // Handle Tab 0: Scrape Recipe from Website URL with picture
+  const handleScrapeRecipe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!urlInput.trim()) return;
+
+    setIsLoading(true);
+    setErrorMessage(null);
+    setScrapedPreview(null);
+
+    try {
+      const scraped = await scrapeRecipeFromUrl(urlInput.trim(), brandPreference);
+      setScrapedPreview(scraped);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to scrape recipe from this website. Please check the URL or try pasting the text.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleConfirmScraped = () => {
+    if (scrapedPreview) {
+      onRecipeCreated(scrapedPreview);
+      onClose();
+    }
+  };
 
   // Handle Tab 1: Parse pasted recipe
   const handleParseRecipe = async (e: React.FormEvent) => {
@@ -209,13 +239,28 @@ Instructions:
         </div>
 
         {/* Tab Selection */}
-        <div className="flex border-b border-slate-200 bg-white px-6 pt-2">
+        <div className="flex border-b border-slate-200 bg-white px-6 pt-2 overflow-x-auto">
+          <button
+            onClick={() => {
+              setActiveTab('url');
+              setErrorMessage(null);
+            }}
+            className={`flex items-center gap-2 py-3 px-4 text-xs font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'url'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Globe className="w-4 h-4 text-[#0071DC]" />
+            <span>From Website / URL</span>
+          </button>
+
           <button
             onClick={() => {
               setActiveTab('paste');
               setErrorMessage(null);
             }}
-            className={`flex items-center gap-2 py-3 px-4 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+            className={`flex items-center gap-2 py-3 px-4 text-xs font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'paste'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -230,7 +275,7 @@ Instructions:
               setActiveTab('ai');
               setErrorMessage(null);
             }}
-            className={`flex items-center gap-2 py-3 px-4 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+            className={`flex items-center gap-2 py-3 px-4 text-xs font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'ai'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -245,7 +290,7 @@ Instructions:
               setActiveTab('manual');
               setErrorMessage(null);
             }}
-            className={`flex items-center gap-2 py-3 px-4 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+            className={`flex items-center gap-2 py-3 px-4 text-xs font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'manual'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -260,6 +305,201 @@ Instructions:
         {errorMessage && (
           <div className="mx-6 mt-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700">
             {errorMessage}
+          </div>
+        )}
+
+        {/* Tab 0: Website URL Scraper */}
+        {activeTab === 'url' && (
+          <div className="p-6 space-y-5">
+            <form onSubmit={handleScrapeRecipe} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-900 mb-1">
+                  Recipe Webpage URL <span className="text-blue-600 font-medium">(Includes automatic picture & ingredient extraction)</span>
+                </label>
+                <div className="relative">
+                  <Globe className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="url"
+                    required
+                    value={urlInput}
+                    onChange={(e) => {
+                      setUrlInput(e.target.value);
+                      if (scrapedPreview) setScrapedPreview(null);
+                    }}
+                    placeholder="https://www.allrecipes.com/recipe/... or Budget Bytes, NYT Cooking, Food Network"
+                    className="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-900 focus:outline-blue-600"
+                  />
+                </div>
+              </div>
+
+              {/* Quick sample URLs to try */}
+              <div className="flex items-center gap-2 text-xs text-slate-500 flex-wrap">
+                <span className="font-medium text-slate-700">Try a sample link:</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUrlInput('https://www.budgetbytes.com/easy-lemon-pepper-chicken/');
+                    setScrapedPreview(null);
+                  }}
+                  className="text-blue-600 hover:underline cursor-pointer bg-blue-50 px-2 py-0.5 rounded text-[11px]"
+                >
+                  Budget Bytes Lemon Chicken
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUrlInput('https://www.allrecipes.com/recipe/219164/the-best-parmesan-chicken-bake/');
+                    setScrapedPreview(null);
+                  }}
+                  className="text-blue-600 hover:underline cursor-pointer bg-blue-50 px-2 py-0.5 rounded text-[11px]"
+                >
+                  Allrecipes Parmesan Bake
+                </button>
+              </div>
+
+              {/* Brand preference selection */}
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div>
+                  <span className="font-semibold text-slate-800">Walmart Brand Matching:</span>
+                  <p className="text-slate-500 text-[11px]">
+                    Select brand tier for scraped ingredients
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setBrandPreference('great_value')}
+                    className={`px-2.5 py-1 font-semibold rounded cursor-pointer transition-colors ${
+                      brandPreference === 'great_value'
+                        ? 'bg-[#0071DC] text-white shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Great Value (Budget)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBrandPreference('name_brand')}
+                    className={`px-2.5 py-1 font-semibold rounded cursor-pointer transition-colors ${
+                      brandPreference === 'name_brand'
+                        ? 'bg-[#0071DC] text-white shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Top Brand Names
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBrandPreference('organic')}
+                    className={`px-2.5 py-1 font-semibold rounded cursor-pointer transition-colors ${
+                      brandPreference === 'organic'
+                        ? 'bg-[#0071DC] text-white shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Organic
+                  </button>
+                </div>
+              </div>
+
+              {!scrapedPreview && (
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading || !urlInput.trim()}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-[#0071DC] hover:bg-[#005bb5] active:scale-98 rounded-lg shadow-sm transition-all disabled:opacity-50 cursor-pointer"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Scraping Recipe & Picture...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Globe className="w-4 h-4" />
+                        <span>Scrape Recipe & Match Walmart Items</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </form>
+
+            {/* Scraped Preview with Picture & Walmart Items */}
+            {scrapedPreview && (
+              <div className="mt-4 p-4 bg-emerald-50/50 border border-emerald-200 rounded-2xl space-y-4 animate-in fade-in duration-200">
+                <div className="flex items-center justify-between border-b border-emerald-200/80 pb-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800">
+                    <Check className="w-4 h-4 text-emerald-600" />
+                    <span>Successfully Extracted from Website with Picture!</span>
+                  </div>
+                  <span className="text-[11px] text-slate-500 font-mono">
+                    {scrapedPreview.ingredients.length} Walmart items matched
+                  </span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4 items-start">
+                  {/* Extracted Recipe Picture */}
+                  <div className="relative w-full sm:w-44 h-36 rounded-xl overflow-hidden bg-slate-200 shrink-0 border border-slate-300/80 shadow-xs">
+                    <img
+                      src={scrapedPreview.image}
+                      alt={scrapedPreview.title}
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-1.5 right-1.5 bg-black/60 backdrop-blur-xs text-white text-[10px] font-medium px-1.5 py-0.5 rounded flex items-center gap-1">
+                      <ImageIcon className="w-3 h-3" />
+                      <span>Photo Included</span>
+                    </div>
+                  </div>
+
+                  <div className="flex-1 space-y-2">
+                    <h3 className="text-base font-bold text-slate-900 leading-snug">
+                      {scrapedPreview.title}
+                    </h3>
+                    <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                      {scrapedPreview.description}
+                    </p>
+                    <div className="flex items-center gap-3 text-xs text-slate-500">
+                      <span>Prep: <strong>{scrapedPreview.prepTime}</strong></span>
+                      <span>·</span>
+                      <span>Cook: <strong>{scrapedPreview.cookTime}</strong></span>
+                      <span>·</span>
+                      <span>Servings: <strong>{scrapedPreview.servings}</strong></span>
+                    </div>
+
+                    <div className="pt-2 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleConfirmScraped}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-98 rounded-xl shadow-md transition-all cursor-pointer"
+                      >
+                        <Check className="w-4 h-4" />
+                        <span>Save Scraped Recipe & Walmart Items</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setScrapedPreview(null);
+                          setUrlInput('');
+                        }}
+                        className="px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-white border border-slate-200 rounded-xl cursor-pointer"
+                      >
+                        Scrape Another
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Clock, Users, ArrowUpRight, ChefHat, Check, Zap, ShoppingBag } from 'lucide-react';
+import { Clock, Users, ArrowUpRight, ChefHat, Check, Zap, ShoppingBag, Trash2, X } from 'lucide-react';
 import { Recipe, DefaultSelectionSettings } from '../types';
 import { calculateRetailPackageQuantity } from '../data/walmartGroceryCatalog';
 import { applyDefaultSelectionToRecipe } from '../utils/defaultSelection';
@@ -13,6 +13,7 @@ interface RecipeCardProps {
   isAddedToCart: boolean;
   defaultSelectionSettings?: DefaultSelectionSettings;
   pantryItems?: Set<string>;
+  onDeleteRecipe?: (recipeId: string) => void;
 }
 
 export const RecipeCard: React.FC<RecipeCardProps> = ({
@@ -22,9 +23,11 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
   isAddedToCart,
   defaultSelectionSettings,
   pantryItems,
+  onDeleteRecipe,
 }) => {
   const [imgError, setImgError] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   // Calculate items to add and estimated total based on default selection settings and pantry
   const effectiveSelection = defaultSelectionSettings
@@ -70,15 +73,70 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
             </div>
           )}
 
-          {/* Cuisine Tag on card image */}
-          <div className="absolute top-2.5 left-2.5 bg-slate-900/80 backdrop-blur-xs text-white text-[11px] font-medium px-2 py-0.5 rounded">
-            {recipe.cuisine}
+          {/* Cuisine Tag & Budget Badge on card image */}
+          <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap max-w-[80%]">
+            <span className="bg-slate-900/80 backdrop-blur-xs text-white text-[11px] font-medium px-2 py-0.5 rounded">
+              {recipe.cuisine}
+            </span>
+            {parseFloat(costPerServing) <= 1.85 && (
+              <span className="bg-emerald-600/90 backdrop-blur-xs text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-2xs">
+                {parseFloat(costPerServing) <= 1.05 ? '⚡ Under $1/serving' : '🏷️ Budget Friendly'}
+              </span>
+            )}
           </div>
 
-          {isAddedToCart && (
-            <div className="absolute top-2.5 right-2.5 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm flex items-center gap-1">
-              <Check className="w-3 h-3" />
-              <span>In Cart</span>
+          {/* Top Right Actions: Delete button & In Cart Badge */}
+          <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-10">
+            {isAddedToCart && (
+              <div className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm flex items-center gap-1">
+                <Check className="w-3 h-3" />
+                <span>In Cart</span>
+              </div>
+            )}
+            {onDeleteRecipe && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowConfirmDelete(true);
+                }}
+                className="p-1 rounded-md bg-slate-900/70 hover:bg-rose-600 text-white/80 hover:text-white backdrop-blur-xs transition-colors cursor-pointer"
+                title="Delete this recipe"
+                aria-label="Delete this recipe"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Delete Confirmation Overlay */}
+          {showConfirmDelete && (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="absolute inset-0 bg-slate-950/85 backdrop-blur-xs z-20 flex flex-col items-center justify-center p-4 text-center text-white animate-in fade-in duration-150"
+            >
+              <Trash2 className="w-6 h-6 text-rose-400 mb-2" />
+              <p className="text-xs font-bold leading-tight mb-1">Delete "{recipe.title}"?</p>
+              <p className="text-[11px] text-slate-300 mb-3">This action cannot be undone.</p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmDelete(false)}
+                  className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowConfirmDelete(false);
+                    onDeleteRecipe?.(recipe.id);
+                  }}
+                  className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg shadow-sm cursor-pointer"
+                >
+                  Yes, Delete
+                </button>
+              </div>
             </div>
           )}
         </div>

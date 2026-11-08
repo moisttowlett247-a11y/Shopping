@@ -357,3 +357,39 @@ export async function getIngredientSubstitutions(ingredientName: string, reason:
   return clientSideSubstitutions(ingredientName, originalPrice);
 }
 
+export async function scrapeRecipeFromUrl(url: string, brandPreference: string = 'great_value'): Promise<Recipe> {
+  const cleanUrl = url.trim();
+  if (!cleanUrl || !/^https?:\/\//i.test(cleanUrl)) {
+    throw new Error('Please enter a valid recipe website URL starting with http:// or https://');
+  }
+
+  const res = await fetch('/api/recipe/scrape', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: cleanUrl, brandPreference }),
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.error || `Failed to scrape recipe (Status: ${res.status})`);
+  }
+
+  const data = await res.json();
+  if (!data.recipe || !data.recipe.ingredients) {
+    throw new Error('No recipe data could be extracted from this webpage.');
+  }
+
+  const boundIngredients = bindIngredientsToWalmartCatalog(data.recipe.ingredients);
+
+  return {
+    ...data.recipe,
+    id: `recipe-scraped-${Date.now()}`,
+    baseServings: data.recipe.servings || 4,
+    image: data.recipe.image || heroImg,
+    ingredients: boundIngredients,
+    sourceUrl: cleanUrl,
+    isCustom: true,
+    createdAt: Date.now(),
+  };
+}
+

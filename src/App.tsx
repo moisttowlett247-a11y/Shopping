@@ -35,7 +35,7 @@ import { isIngredientInPantry } from './utils/pantry';
 // Storage version key to guarantee old corrupt/hallucinated SKU items or stale quantities
 // are purged from the user's browser localStorage on first load!
 const STORAGE_VERSION_KEY = 'cartcraft_storage_version';
-const CURRENT_STORAGE_VERSION = 'v22_digiorno_item_5328327386';
+const CURRENT_STORAGE_VERSION = 'v23_twenty_budget_recipes';
 
 // Helper to ensure Walmart URLs are 100% matched against our verified Walmart Grocery Catalog
 // CRITICAL: NEVER overwrite the recipe's authentic food name!
@@ -168,7 +168,7 @@ export default function App() {
   // Drawers and Modals
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isRecipeInputOpen, setIsRecipeInputOpen] = useState(false);
-  const [recipeInputTab, setRecipeInputTab] = useState<'paste' | 'manual' | 'ai'>('paste');
+  const [recipeInputTab, setRecipeInputTab] = useState<'url' | 'paste' | 'manual' | 'ai'>('url');
   const [substituteIngredient, setSubstituteIngredient] = useState<Ingredient | null>(null);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
 
@@ -277,6 +277,7 @@ export default function App() {
   // Search & Filters in catalog
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCuisine, setSelectedCuisine] = useState('All');
+  const [budgetFilter, setBudgetFilter] = useState<'all' | 'under1' | 'under2'>('all');
 
   // Sync to localStorage
   useEffect(() => {
@@ -545,6 +546,17 @@ export default function App() {
     );
   };
 
+  // Handler: Delete recipe from catalog and saved collection
+  const handleDeleteRecipe = (recipeId: string) => {
+    const target = recipes.find((r) => r.id === recipeId);
+    const title = target ? target.title : 'Recipe';
+    setRecipes((prev) => prev.filter((r) => r.id !== recipeId));
+    if (selectedRecipeId === recipeId) {
+      setSelectedRecipeId(null);
+    }
+    showToast(`✓ Deleted "${title}" from your recipe collection.`);
+  };
+
   // Handler: Apply substitution to ingredient
   const handleApplySubstitution = (ingredientId: string, sub: SubstitutionOption) => {
     if (!selectedRecipe) return;
@@ -581,10 +593,27 @@ export default function App() {
     const matchesSearch =
       recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       recipe.cuisine.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      recipe.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())) ||
       recipe.ingredients.some((i) => i.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const matchesCuisine = selectedCuisine === 'All' || recipe.cuisine === selectedCuisine;
-    return matchesSearch && matchesCuisine;
+
+    const costPerServing = (() => {
+      const total = recipe.ingredients.reduce((sum, curr) => {
+        const pkgs = calculateRetailPackageQuantity(curr.amount || 1, curr.unit, curr.packageSize, curr.category);
+        return sum + (curr.estimatedPrice || 2) * pkgs;
+      }, 0);
+      return recipe.servings > 0 ? total / recipe.servings : 1;
+    })();
+
+    const matchesBudget =
+      budgetFilter === 'all'
+        ? true
+        : budgetFilter === 'under1'
+        ? costPerServing <= 1.05
+        : costPerServing <= 1.85 || recipe.tags.some((t) => t.toLowerCase().includes('budget'));
+
+    return matchesSearch && matchesCuisine && matchesBudget;
   });
 
   return (
@@ -611,7 +640,7 @@ export default function App() {
         pantryCount={pantryItems.size}
         onOpenCart={() => setIsCartOpen(true)}
         onOpenRecipeInput={() => {
-          setRecipeInputTab('paste');
+          setRecipeInputTab('url');
           setIsRecipeInputOpen(true);
         }}
         onOpenQuickAddItems={() => setIsQuickAddOpen(true)}
@@ -641,6 +670,7 @@ export default function App() {
             onOpenDefaultSelectionSettings={() => setIsDefaultSelectionOpen(true)}
             globalPantryItems={pantryItems}
             onOpenPantryManager={() => setIsPantryManagerOpen(true)}
+            onDeleteRecipe={handleDeleteRecipe}
           />
         ) : (
           /* Storefront & Catalog View */
@@ -709,7 +739,7 @@ export default function App() {
 
                   <button
                     onClick={() => {
-                      setRecipeInputTab('paste');
+                      setRecipeInputTab('url');
                       setIsRecipeInputOpen(true);
                     }}
                     className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#0071DC] hover:bg-[#005bb5] rounded-xl shadow-xs cursor-pointer whitespace-nowrap"
@@ -729,21 +759,60 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Cuisine Filter Tabs */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-6 text-xs no-scrollbar">
-                {cuisines.map((c) => (
+              {/* Filter Tabs: Budget & Cuisine */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-6 bg-white p-3 rounded-xl border border-slate-200">
+                {/* Budget Quick Filters */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 text-xs no-scrollbar">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mr-1 shrink-0">Budget:</span>
                   <button
-                    key={c}
-                    onClick={() => setSelectedCuisine(c)}
-                    className={`px-3 py-1.5 font-medium rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
-                      selectedCuisine === c
-                        ? 'bg-slate-900 text-white shadow-2xs'
-                        : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
+                    onClick={() => setBudgetFilter('all')}
+                    className={`px-3 py-1.5 font-semibold rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
+                      budgetFilter === 'all'
+                        ? 'bg-[#0071DC] text-white shadow-2xs'
+                        : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200'
                     }`}
                   >
-                    {c}
+                    All Budgets
                   </button>
-                ))}
+                  <button
+                    onClick={() => setBudgetFilter('under1')}
+                    className={`px-3 py-1.5 font-semibold rounded-lg transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+                      budgetFilter === 'under1'
+                        ? 'bg-emerald-700 text-white shadow-2xs'
+                        : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200/60'
+                    }`}
+                  >
+                    <span>⚡ Under $1 / Serving</span>
+                  </button>
+                  <button
+                    onClick={() => setBudgetFilter('under2')}
+                    className={`px-3 py-1.5 font-semibold rounded-lg transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+                      budgetFilter === 'under2'
+                        ? 'bg-emerald-700 text-white shadow-2xs'
+                        : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200/60'
+                    }`}
+                  >
+                    <span>🏷️ Low Budget (&lt; $1.85 / Serving)</span>
+                  </button>
+                </div>
+
+                {/* Cuisine Filter Tabs */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 text-xs no-scrollbar border-t lg:border-t-0 pt-2 lg:pt-0 border-slate-100">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mr-1 shrink-0">Cuisine:</span>
+                  {cuisines.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setSelectedCuisine(c)}
+                      className={`px-3 py-1.5 font-medium rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
+                        selectedCuisine === c
+                          ? 'bg-slate-900 text-white shadow-2xs'
+                          : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200'
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Recipe Cards Grid */}
@@ -781,6 +850,7 @@ export default function App() {
                         isAddedToCart={isAllAdded}
                         defaultSelectionSettings={defaultSelectionSettings}
                         pantryItems={pantryItems}
+                        onDeleteRecipe={handleDeleteRecipe}
                       />
                     );
                   })}

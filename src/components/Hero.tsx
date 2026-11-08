@@ -3,7 +3,7 @@ import { Sparkles, Plus, ChefHat, ArrowRight, Package } from 'lucide-react';
 import { heroImg } from '../assets/images';
 
 interface HeroProps {
-  onOpenRecipeInput: (tab?: 'paste' | 'manual' | 'ai') => void;
+  onOpenRecipeInput: (tab?: 'url' | 'paste' | 'manual' | 'ai') => void;
   onExploreRecipes: () => void;
   totalRecipesCount: number;
   onOpenPantryManager?: () => void;

@@ -31,6 +31,7 @@ export interface Recipe {
   ingredients: Ingredient[];
   isCustom?: boolean;
   createdAt?: number;
+  sourceUrl?: string;
 }
 
 export interface SubstitutionOption {
